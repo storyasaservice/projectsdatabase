@@ -52,29 +52,33 @@ Two linked tables, one base.
 - Projects table: `tblERbkBOwDY4WsMV`
 - SOW table: `tblRnLtee8fTaI57w`
 - Decisions table: `tblCWLdCkpz3DETd4` — https://airtable.com/apph33yxxKNjn23Bj/tblCWLdCkpz3DETd4/viwli9uPTAf9Hi8CU
-  (created 2026-09-03; field schema not yet documented here — see §9)
+  (created 2026-09-03 — see §9)
 
 ### Projects table fields
 
+Re-read from live schema 2026-09-03 — several fields were renamed/added since
+the 2026-08-28 snapshot; this replaces that version.
+
 | Field | Field ID | Type | Notes |
 |---|---|---|---|
-| Project Name | fldDRRUGOxDudM0zO | singleLineText | Primary field |
-| Client | fldkBb2clHrhCUETA | singleLineText | |
+| Project | fldDRRUGOxDudM0zO | singleLineText | Primary field. Renamed from "Project Name". One row = one project, not one client. |
+| Client | fldkBb2clHrhCUETA | singleLineText | The specific client/sub-unit (e.g. Trienens Institute) |
 | Status | fld7cX7gulOI2Z3Mg | singleSelect | Active / Prospect / Proposal / Closed |
-| Work Description | fldkcnkZCVCDm2ur9 | multilineText | |
+| Notes | fldkcnkZCVCDm2ur9 | multilineText | Renamed from "Work Description" |
 | Next Action | fldl36WJAPPzJWh29 | multilineText | Most useful weekly field |
-| (attachments) | fldJNmEXIElwJKMf2 | multipleAttachments | Largely unused |
-| Type | fld2ZfDcdzo0Y6rDy | singleSelect | Website / Report·Deck / Planning / Consulting / Event / Design·Visual Identity / Story·Content / Other |
-| (date) | fldLLAezZtayEKu7S | date | Stub, unpopulated |
+| Associated Docs/Links | fldJNmEXIElwJKMf2 | multipleAttachments | Was unnamed/unused; now labeled |
+| Category | fld2ZfDcdzo0Y6rDy | singleSelect | Renamed from "Type". Website / Report·Deck / Planning / Consulting / Event / Design·Visual Identity / Story·Content / Other |
+| Start Date | fldLLAezZtayEKu7S | date | Renamed from stub "(date)" |
 | POC | fld2KZ8MrMiPC9yT1 | multilineText | |
-| (collaborator) | fldynVLnXJLkYah8v | singleCollaborator | Stub, unpopulated |
+| Assignee | fldynVLnXJLkYah8v | singleCollaborator | Renamed from stub "(collaborator)" |
 | Parent Org | fldqp8Y5GORwrQ1Jk | singleSelect | ⚠️ reused old "Priority" column — stray High/Medium/Low options mixed in with org names |
-| (AI summary) | fldcOxO7pMOQajz46 | aiText | Legacy, may error |
-| (AI summary) | fld8ckvy9mG8iEvqr | aiText | Legacy, over attachments |
+| Project Summary (AI) | fldcOxO7pMOQajz46 | aiText | Legacy, may error |
+| Source Document Summary (AI) | fld8ckvy9mG8iEvqr | aiText | Legacy, over attachments |
 | Assigned To | fld3aQFBjfYcGrhp9 | multipleSelects | Deliberately sparse — only fill where source is explicit |
 | SOWs | fld5FahVTcPKhDv2x | multipleRecordLinks | → SOW table |
 | # SOWs | fldZUCc4U9bQppt6M | count | |
 | # Needing Attention | fldD9WWmOh5GH2Ymf | rollup | SUM of SOW `Needs Attention` |
+| Next Deliverable Due | fldPVjNQDoydWnH9d | rollup | New since 2026-08-28. Earliest upcoming `Due Date` across linked SOWs |
 
 ### SOW table fields
 
@@ -91,10 +95,29 @@ Two linked tables, one base.
 | Next Action | fldPCaeCH6PEeUE6O | singleLineText | |
 | Notes | fldR3qSn7ppA5vqx0 | multilineText | Also where normalization notes go |
 | Needs Attention | fldvloqdFQwJ60QlT | formula | `IF({Status}="Executed & Filed", 0, 1)` |
+| Next Deliverable | fldEKSnFcFOfK8q4W | singleLineText | New since 2026-08-28. Next concrete milestone from the source doc's schedule; blank if none |
+| Due Date | fldTYmmkMqFOw3jPK | date | New since 2026-08-28. Date `Next Deliverable` is due |
+| SOW Document | fldqDiwA0pxtzR1LX | url | New since 2026-08-28. Direct Drive link to the source SOW doc |
 
 **SOW Status controlled options (exact spelling matters):**
 Executed & Filed · Executed, not filed · Awaiting client countersignature ·
 Under review · Awaiting signature · Stalled · Not started · Not yet formalized
+
+### Decisions table fields
+
+Table `tblCWLdCkpz3DETd4`, created 2026-09-03 for the ongoing-update process
+in §9 — logs anything forwarded to `ops@story.as` that needs a human call
+before it can be written to Projects/SOWs (new/ambiguous items, any Story As
+vs. JLX entity call).
+
+| Field | Field ID | Type | Notes |
+|---|---|---|---|
+| Name | fldHEft3Tafii39l0 | singleLineText | Primary field — short label for the decision needed |
+| Notes | fldJ2ZSMb5G5gSDeU | multilineText | Context: what was forwarded, why it needs a call, source email |
+| Assignee | fldSXWBUV0E8WFkAW | singleCollaborator | Who's expected to decide (usually Simon or James) |
+| Status | fldWb4vXK9IzABYtF | singleSelect | Todo / In progress / Done |
+| Attachments | fldEKQFSXI2pXXqPx | multipleAttachments | Forwarded doc, if any |
+| Attachment Summary (AI) | fldiXriVDDFPVrKEP | aiText | Auto-generated from Attachments |
 
 ## 4. Other connected systems
 
@@ -195,13 +218,24 @@ prefer over-logging to silently dropping something forwarded.
     It gets logged to the Decisions table (below) for Simon/James to
     resolve, with the source email and any forwarded doc linked.
 - **Decisions table:** `tblCWLdCkpz3DETd4` in base `apph33yxxKNjn23Bj`,
-  created 2026-09-03. Field schema not yet documented here — read it back
-  once Airtable access is available and add it to §3. This supersedes the
-  ad hoc §7 list going forward — new open items should be logged there
-  instead of edited into this file. §7 remains as the historical record
-  of items open as of the 2026-08-28 rebuild.
-- **Blocked on:** the Gmail and Airtable connectors being enabled for
-  whichever Claude Code session runs this routine — as of 2026-09-03,
-  neither is enabled in this chat (only Google Drive is). Once enabled:
-  read back the Decisions table schema, confirm `ops@story.as` membership,
-  and wire up the recurring Routine.
+  created 2026-09-03. Schema documented in §3. This supersedes the ad hoc
+  §7 list going forward — new open items should be logged there instead
+  of edited into this file. §7 remains as the historical record of items
+  open as of the 2026-08-28 rebuild.
+- **Routine:** `trig_01Ly6ShLdarBWXqftKXLMkKE`, "Story As ops inbox triage
+  (Mon/Thu)", cron `0 12 * * 1,4` (Mon+Thu 8am America/New_York). Fires
+  into this same Claude session (self-bound) rather than a fresh one per
+  run — the org's trigger config doesn't allow passing connector grants
+  (Airtable/Gmail) to a fresh-session routine, so binding to a session
+  that already has both enabled was the only way to make it actually work.
+  **Consequence:** this only keeps working as long as Airtable and Gmail
+  stay enabled for this specific chat — if either gets disabled, the next
+  scheduled run will fail silently on missing tools. Verify after the
+  first run (2026-09-07) that it went through.
+- **ops@story.as membership unverified.** A Gmail search from james@story.as
+  for anything to/about `ops@story.as` (inbox, all mail, spam/trash) came
+  back with zero results as of 2026-09-03. That's consistent with "nothing
+  forwarded yet," but also with James not actually being a member of the
+  group — those look identical from a mailbox search. Send a test message
+  to the group and confirm it lands in James's inbox before relying on
+  the Monday run to catch real content.
