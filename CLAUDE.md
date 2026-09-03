@@ -101,6 +101,7 @@ Under review · Awaiting signature · Stalled · Not started · Not yet formaliz
 | Google Drive | Story As shared drive | `0AE8LR9pTzQbRUk9PVA` |
 | Google Sheets | Legacy project tracker | `10s4YeJl4kqERlu-4n6DKlhGuxncAk5bIJsUqr4A17Sw` |
 | Google Docs | ACT meeting notes log | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
+| Google Group | Ops intake inbox — Simon forwards SOW/contract tracking info here | `ops@story.as` (members: James, ops-monitoring session — confirm exact address/membership) |
 | HubSpot | JLX only — Story As not yet populated | — |
 | Harvest | Out of scope (JLX side) | — |
 | Source file | Authoritative SOW master | `SOW_Tracker_Redesigned_DRAFT.xlsx` |
@@ -168,3 +169,35 @@ names returns nothing, confirming Story As contacts aren't there yet.
   in that record's Notes field.
 - Six original out-of-scope rows deleted during rebuild: RENU, Kaplan, ABA,
   Associated Colleges, NC State, and a blank orphan.
+
+## 9. Ongoing update process (started 2026-09-03)
+
+**Goal:** stop relying on one-off rebuilds. Simon forwards tracking material
+(SOW updates, signed docs, new engagements) to a shared inbox; a recurring
+Claude routine reads it and keeps Projects/SOW current. Because this base is
+also meant to capture as much project history as possible for future use,
+prefer over-logging to silently dropping something forwarded.
+
+- **Intake inbox:** `ops@story.as`, a Google Group. James and Simon are
+  both members; the Claude session that runs the routine also needs to be
+  a member (or otherwise have read access) so forwarded mail is visible to it.
+- **Cadence:** twice weekly (target Monday + Thursday) — a scheduled Routine
+  checks the inbox and updates the tracker.
+- **Triage rule, per the normalize-don't-overwrite and entity-separation
+  principles in §0/§5:**
+  - Clear, unambiguous updates (e.g. a status flip to "Executed & Filed",
+    a confirmed sent/signed date) get written directly to the matching
+    SOW/Project record.
+  - Anything new, ambiguous, or requiring a judgment call — especially any
+    call on whether an item is Story As vs. JLX — is **not** auto-written.
+    It gets logged to the Decisions table (below) for Simon/James to
+    resolve, with the source email and any forwarded doc linked.
+- **Decisions table:** a new Airtable table in base `apph33yxxKNjn23Bj`,
+  not yet created, for logging open items/decisions needing a call. This
+  supersedes the ad hoc §7 list going forward — new open items should be
+  logged there instead of edited into this file. §7 remains as the
+  historical record of items open as of the 2026-08-28 rebuild.
+- **Blocked on:** the Gmail and Airtable connectors being enabled for
+  whichever Claude Code session runs this routine — as of 2026-09-03,
+  neither is enabled in this chat (only Google Drive is). Once enabled,
+  create the Decisions table and wire up the recurring Routine.
