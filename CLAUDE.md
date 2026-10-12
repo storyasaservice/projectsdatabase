@@ -129,6 +129,7 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 | System | Scope | Key IDs |
 |---|---|---|
 | Google Drive | Story As shared drive (source SOW/MSA documents) | `0AE8LR9pTzQbRUk9PVA` |
+| Drive folder | **Clients** (shared with james@story.as): one subfolder per client, holding SOWs and work files. The repo session's Drive connection can read it | `1gJjAicV-FFM4Y1yVq2jAaDWFqKrIoWQz` |
 | Drive folder | **Project Tracking**: decision log (`SOW_population_log*`), ACT prep logs, Questions_for_Simon | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
 | Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
 | Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
