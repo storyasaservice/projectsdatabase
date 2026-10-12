@@ -1,241 +1,227 @@
 # Story As Project Tracker — Claude Code Reference
 
 This file is the working context for the Story As Airtable project tracker.
-Read this before making any changes.
+Read this before making any changes. Last rewritten 2026-10-12 against the
+live schema; it replaces the 2026-09-03 version, which predated the 9/22 ACT
+workflow and the 9/29 schema cleanup.
+
+The authoritative append-only history of what was decided and why is the
+Drive log in **Project Tracking** (see §4). This file is a working summary.
 
 ## 0. Non-negotiable rule: entity separation
 
-Story As, Inc. and Jackrabbit Learning Experience LLC (JLX) are two distinct
-legal entities with separate tracking systems, HubSpot accounts, and Airtable
-bases. **They must never be commingled.**
+Story As A Service, Inc. and Jackrabbit Learning Experience LLC (JLX) are two
+distinct legal entities with separate tracking systems, HubSpot accounts, and
+Airtable bases. **They must never be commingled.**
 
-- This tracker holds **Story As work only**. No JLX contracts belong in it —
-  even for work historically performed by Story As while operating as a JLX
-  service arm.
-- Training courses are **always** JLX-entity contracts. Categorically excluded.
-- **When in doubt, exclude.** Default to leaving something out rather than
-  risking a JLX contract landing in the Story As tracker.
+- This tracker holds **Story As work only**.
+- Scope rule as updated 2026-09-22: projects Story As actually delivers are
+  tracked, including Story As work done on older contracts JLX signed (e.g.
+  Excelsior SOW1–10, Kean, HMMB). JLX's own work is never tracked here.
+- Training courses are **always** JLX work. Categorically excluded.
+- JLX's own website, finances, staffing and vendors (bookkeeping, Azurium,
+  etc.) are JLX matters. Leave them out even when they come up in a shared
+  "Story As + JLX | ACT" meeting.
+- **When in doubt, exclude** and ask James or Simon.
 - Harvest is JLX-only. Do not build Harvest integration here.
-- HubSpot for Story As is not yet populated — the connected HubSpot account
-  is JLX's. Story As prospects/contacts live there once set up, not in Airtable.
 
 ## 1. What the tracker is
 
-Internal-only, at-a-glance weekly view of every active Story As project:
-status, owner, point of contact, next action. Not client-facing.
+Internal-only, at-a-glance view of every live Story As project, built to
+prepare the weekly **ACT** meeting (Simon, James, Jason). Not client-facing.
 
-- Primary weekly user: **Simon** (CEO). Contributors: James, Jason, Marco, Sarah, Darina.
-- Documents high-level project health, not day-to-day task work.
-- Prospects live in HubSpot, not here. Active projects only.
+- Answers two questions: where does every active project stand, and what
+  deliverables are coming up?
+- Sales (proposals, verbal yeses, unsigned SOWs, signatures, renewals, new
+  deals) is Simon's, in HubSpot. It never gets an ACT Flag or Next Action.
+- Not a contract-admin or task tool: no granular tasks, **no financial data**
+  (fees, invoices, costs), no speculative features.
 
 ## 2. Data model
 
-Two linked tables, one base.
+Two linked tables in one base.
 
-- **Projects table** — project-grain. One row = one project, never one client.
-  A client can own several rows (e.g. Northwestern → Trienens, NU Water, Wise Scales).
-- **SOW table** — contract-grain. One row per Statement of Work, linked to its
-  parent project.
-- Rollups on Projects (`# SOWs`, `# Needing Attention`) surface contract health
-  without opening anything.
+- **Projects** — project-grain. One row = one project, never one client. A
+  client can own several rows (Northwestern → Trienens retainer, Trienens
+  Visual Identity Phase 2, NU Water…). Retainers are their own rows. Status:
+  Active / Prospect / Proposal / Closed. Proposal rows are sales.
+- **SOWs** — contract-grain. One row per Statement of Work, linked to its
+  project. Contract facts only (term, deliverables, signatures, document
+  link). Next-step info lives on Projects (`Next Action` + `Due`).
+- Splitting out a separate **Clients** table was proposed at the 9/30 ACT.
+  It is not built and not approved. Don't build it without James's sign-off.
 
-**Explicitly out of scope:**
-- No granular task tracking (goals/deliverables/deadlines only)
-- No financial or cost data
-- No speculative features
-- No dedicated Clients/Parent-Org table or MSA/Entity-Assignment tracking
-  (Parent Org and Client are plain fields on Projects for now)
-
-## 3. Airtable IDs
+## 3. Airtable IDs and fields
 
 - Base: `apph33yxxKNjn23Bj` — https://airtable.com/apph33yxxKNjn23Bj
-- Projects table: `tblERbkBOwDY4WsMV`
-- SOW table: `tblRnLtee8fTaI57w`
-- Decisions table: `tblCWLdCkpz3DETd4` — https://airtable.com/apph33yxxKNjn23Bj/tblCWLdCkpz3DETd4/viwli9uPTAf9Hi8CU
-  (created 2026-09-03 — see §9)
+- Projects: `tblERbkBOwDY4WsMV`
+- SOWs: `tblRnLtee8fTaI57w`
+- ACT Headlines view (Projects, ACT Flag not empty, sorted on `Due`):
+  `viwPepItyTxwcPj9K`
+- Decisions: `tblCWLdCkpz3DETd4` (created 2026-09-03). As of 2026-10-12 it is
+  **not visible** to the Airtable connection in the repo's Claude session,
+  most likely a permissions issue James is fixing, not a deletion.
 
-### Projects table fields
-
-Re-read from live schema 2026-09-03 — several fields were renamed/added since
-the 2026-08-28 snapshot; this replaces that version.
+### Projects fields (live schema, 2026-10-12)
 
 | Field | Field ID | Type | Notes |
 |---|---|---|---|
-| Project | fldDRRUGOxDudM0zO | singleLineText | Primary field. Renamed from "Project Name". One row = one project, not one client. |
-| Client | fldkBb2clHrhCUETA | singleLineText | The specific client/sub-unit (e.g. Trienens Institute) |
+| Project | fldDRRUGOxDudM0zO | singleLineText | Primary. "Client — specific project name" from the SOW |
+| Client | fldkBb2clHrhCUETA | singleLineText | Specific client/sub-unit |
 | Status | fld7cX7gulOI2Z3Mg | singleSelect | Active / Prospect / Proposal / Closed |
-| Notes | fldkcnkZCVCDm2ur9 | multilineText | Renamed from "Work Description" |
-| Next Action | fldl36WJAPPzJWh29 | multilineText | Most useful weekly field |
-| Associated Docs/Links | fldJNmEXIElwJKMf2 | multipleAttachments | Was unnamed/unused; now labeled |
-| Category | fld2ZfDcdzo0Y6rDy | singleSelect | Renamed from "Type". Website / Report·Deck / Planning / Consulting / Event / Design·Visual Identity / Story·Content / Other |
-| Start Date | fldLLAezZtayEKu7S | date | Renamed from stub "(date)" |
-| POC | fld2KZ8MrMiPC9yT1 | multilineText | |
-| Assignee | fldynVLnXJLkYah8v | singleCollaborator | Renamed from stub "(collaborator)" |
-| Parent Org | fldqp8Y5GORwrQ1Jk | singleSelect | ⚠️ reused old "Priority" column — stray High/Medium/Low options mixed in with org names |
-| Project Summary (AI) | fldcOxO7pMOQajz46 | aiText | Legacy, may error |
-| Source Document Summary (AI) | fld8ckvy9mG8iEvqr | aiText | Legacy, over attachments |
-| Assigned To | fld3aQFBjfYcGrhp9 | multipleSelects | Deliberately sparse — only fill where source is explicit |
-| SOWs | fld5FahVTcPKhDv2x | multipleRecordLinks | → SOW table |
+| Notes | fldkcnkZCVCDm2ur9 | multilineText | **Append only.** Dated history; old Next Actions land here |
+| Next Action | fldl36WJAPPzJWh29 | multilineText | Only a clear due deliverable: "Due M/D — what". Blank is normal |
+| Due | fldzBD35sasrNRos6 | date | Date of the Next Action deliverable. Set and clear together with Next Action |
+| ACT Flag | fldMEtAAai6aqfMOu | singleSelect | See ACT rules below |
+| Category | fld2ZfDcdzo0Y6rDy | singleSelect | |
+| POC | fld2KZ8MrMiPC9yT1 | multilineText | Client-side point of contact |
+| Parent Org | fldqp8Y5GORwrQ1Jk | singleSelect | Umbrella institution. Reused old Priority column; has dead legacy options |
+| Assigned To | fld3aQFBjfYcGrhp9 | multipleSelects | Simon / James / Jason / Marco / Sarah / Darina |
+| SOWs | fld5FahVTcPKhDv2x | multipleRecordLinks | → SOWs |
 | # SOWs | fldZUCc4U9bQppt6M | count | |
-| # Needing Attention | fldD9WWmOh5GH2Ymf | rollup | SUM of SOW `Needs Attention` |
-| Next Deliverable Due | fldPVjNQDoydWnH9d | rollup | New since 2026-08-28. Earliest upcoming `Due Date` across linked SOWs |
+| SOW Term Starts | fldAHeQKLe1MPE54s | rollup | Earliest SOW Term Start (Timeline view) |
+| SOW Term Ends | fldj9PNzOGgKus5Bj | rollup | Latest SOW Term End. Renewals = sales, not ACT |
+| Project Summary (AI) | fldcOxO7pMOQajz46 | aiText | Legacy |
 
-### SOW table fields
+### SOWs fields (live schema, 2026-10-12)
 
 | Field | Field ID | Type | Notes |
 |---|---|---|---|
-| SOW / Engagement | fldulsGfCZWjOzdb8 | singleLineText | Primary field |
-| Project | fldkqlsRVk0wxDWqC | multipleRecordLinks | → parent Project |
-| Topic (from document) | flduZFquZJm2UMfH8 | multilineText | From SOW Services/Deliverables |
-| Sent Date | fldbsBE3Hk1jPzmVN | date (ISO) | |
+| SOW / Engagement | fldulsGfCZWjOzdb8 | singleLineText | Primary, e.g. "Trienens Institute — SOW12 (visual phase 2)" |
+| Project | fldkqlsRVk0wxDWqC | multipleRecordLinks | → Projects |
+| SOW Term Start | fldgj7pNkkYH5tQeI | date | From the SOW document |
+| SOW Term End | fldQ5Dv4ss1EWWTtC | date | From the SOW document |
+| Deliverables | flduZFquZJm2UMfH8 | multilineText | Was "Topic". Static copy of what the SOW contracts for: "N deliverables:" then one bullet each |
+| Status | fld9l96Ul2qMSJAUo | singleSelect | Controlled list below |
 | Signed by Us | fldCLYudse7i4n2Ju | checkbox | |
 | Signed by Client | fldWFFreejkIB3OKz | checkbox | |
-| Filed in Drive | fldPTr8HNrRYHygGb | checkbox | |
-| Status | fld9l96Ul2qMSJAUo | singleSelect | See controlled list below |
-| Next Action | fldPCaeCH6PEeUE6O | singleLineText | |
-| Notes | fldR3qSn7ppA5vqx0 | multilineText | Also where normalization notes go |
-| Needs Attention | fldvloqdFQwJ60QlT | formula | `IF({Status}="Executed & Filed", 0, 1)` |
-| Next Deliverable | fldEKSnFcFOfK8q4W | singleLineText | New since 2026-08-28. Next concrete milestone from the source doc's schedule; blank if none |
-| Due Date | fldTYmmkMqFOw3jPK | date | New since 2026-08-28. Date `Next Deliverable` is due |
-| SOW Document | fldqDiwA0pxtzR1LX | url | New since 2026-08-28. Direct Drive link to the source SOW doc |
+| SOW Document | fldqDiwA0pxtzR1LX | url | Direct Drive link to the source document |
+| Notes | fldR3qSn7ppA5vqx0 | multilineText | Append only. Normalization and source notes go here |
 
-**SOW Status controlled options (exact spelling matters):**
-Executed & Filed · Executed, not filed · Awaiting client countersignature ·
-Under review · Awaiting signature · Stalled · Not started · Not yet formalized
+Removed on 9/29 (renamed "DELETE — …", then deleted): SOW Next Action, Sent
+Date, Filed in Drive, Next Deliverable, Due Date, Needs Attention, and the
+Projects rollups that depended on them. Unused Projects fields were also
+dropped. Don't reference any of them.
 
-### Decisions table fields
+**SOW Status options (exact spelling):** Executed & Filed · Executed, not
+filed · Awaiting client countersignature · Under review · Awaiting signature
+· Stalled · Not started · Not yet formalized · Declined
 
-Table `tblCWLdCkpz3DETd4`, created 2026-09-03 for the ongoing-update process
-in §9 — logs anything forwarded to `ops@story.as` that needs a human call
-before it can be written to Projects/SOWs (new/ambiguous items, any Story As
-vs. JLX entity call).
+### ACT rules (James, 9/22–9/29)
 
-| Field | Field ID | Type | Notes |
-|---|---|---|---|
-| Name | fldHEft3Tafii39l0 | singleLineText | Primary field — short label for the decision needed |
-| Notes | fldJ2ZSMb5G5gSDeU | multilineText | Context: what was forwarded, why it needs a call, source email |
-| Assignee | fldSXWBUV0E8WFkAW | singleCollaborator | Who's expected to decide (usually Simon or James) |
-| Status | fldWb4vXK9IzABYtF | singleSelect | Todo / In progress / Done |
-| Attachments | fldEKQFSXI2pXXqPx | multipleAttachments | Forwarded doc, if any |
-| Attachment Summary (AI) | fldiXriVDDFPVrKEP | aiText | Auto-generated from Attachments |
+- Every **Active** row gets exactly one ACT Flag. Priority when several apply:
+  **Issue > Due This Week > Win > Coming Up**.
+  - **Issue**: a delivery problem (late, at risk, stuck, rescoped, unhappy
+    client), including a `Due` date that passed with no sign of delivery.
+    Contract or signature matters are never Issues.
+  - **Due This Week**: `Due` falls within 7 days of the ACT date.
+  - **Win**: rare. A specific, exemplary client reaction to our work in the
+    last ~2 weeks. Never for signing, renewing or simply delivering.
+  - **Coming Up**: every other Active project in play, dated or not.
+- Proposal and Closed rows: flag blank, Next Action blank.
+- "Due Soon" and "Update" are retired. "Update" is still a dead option on the
+  field; the Whiteboard shows such rows under Coming Up.
+- Changing a Next Action: first append the old text to Notes as
+  `\n\n[Status M/D/YY] <old text>`, then write the new one. Never delete
+  history.
 
 ## 4. Other connected systems
 
 | System | Scope | Key IDs |
 |---|---|---|
-| Google Drive | Story As shared drive | `0AE8LR9pTzQbRUk9PVA` |
-| Google Sheets | Legacy project tracker | `10s4YeJl4kqERlu-4n6DKlhGuxncAk5bIJsUqr4A17Sw` |
-| Google Docs | ACT meeting notes log | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
-| Google Group | Ops intake inbox — Simon forwards SOW/contract tracking info here | `ops@story.as` (members: James, ops-monitoring session — confirm exact address/membership) |
-| HubSpot | JLX only — Story As not yet populated | — |
-| Harvest | Out of scope (JLX side) | — |
-| Source file | Authoritative SOW master | `SOW_Tracker_Redesigned_DRAFT.xlsx` |
+| Google Drive | Story As shared drive (source SOW/MSA documents) | `0AE8LR9pTzQbRUk9PVA` |
+| Drive folder | **Project Tracking**: decision log (`SOW_population_log*`), ACT prep logs, Questions_for_Simon | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
+| Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
+| Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
+| Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
+| HubSpot | Story As sales/pipeline (Simon). The HubSpot connector seen so far was JLX's | — |
+| Harvest | Out of scope (JLX) | — |
+
+The old Whiteboard copy on James's JLX account
+(https://claude.ai/artifact/3HWJxHvKbbG8LynnE1rn33) is to be deleted by James
+once the new one is confirmed.
 
 ## 5. Working principles
 
 1. **Explicit approval at each structural decision point.** James makes the
-   structural call; build to it. No unilateral scope or schema decisions.
-2. **Full process transparency.** Keep a running log of decisions, rules, and
-   actions during any complex data operation.
-3. **Drive documents beat the tracker sheet when they conflict.** The actual
-   SOW documents in Drive are authoritative over the spreadsheet.
-4. **Normalize, don't silently overwrite.** Status values that don't match a
-   controlled option get normalized with a note in that record's Notes field.
-5. **Stub-and-populate over wait-for-complete.** Build the structure, then
-   fill incrementally.
-6. **Scope discipline always.** No speculative features, no financial data,
-   no granular task tracking.
+   structural call; build to it. No unilateral scope or schema changes.
+2. **Full process transparency.** Log decisions and actions; long operations
+   get a dated entry in the Project Tracking Drive log.
+3. **The SOW document wins.** Drive documents are authoritative over the
+   tracker spreadsheet, and the signed SOW is authoritative over email
+   summaries. For naming, use the SOW's name even if it's imperfect (e.g. UT
+   Austin "Biological Sciences", not "Molecular Biosciences").
+4. **Normalize, don't silently overwrite.** Append, with a dated note naming
+   the source. Never fabricate a date or status; leave it blank and say why.
+5. **Scope discipline always.** No financial data, no granular tasks, no
+   speculative features.
+6. **Gemini meeting notes garble names.** Seen so far: "Trainance"/"TRINES"
+   = Trienens, "Sarah Young" = Sera Young (WISE POC), "Rochester Institute of
+   Technology" = University of Rochester IIS, "Lab Exchange" = LabXchange,
+   "Excelsier" = Excelsior. Confirm before writing.
 
 ## 6. Tool gotchas
 
 **Airtable MCP:**
-- Linked-record fields require the target record ID as an array
-  (e.g. `["recXXXX"]`) with `typecast: true` on create/update calls.
-- Rollup fields need both `recordLinkFieldId` and `fieldIdInLinkedTable` —
-  omitting either causes a silent failure.
-- `create_field` occasionally hits an approval gate; retry the identical
-  call — it typically clears. `update_field` and `update_records_for_table`
-  run clean.
-- `search_records` is reliable for finding project rows by keyword.
-- `get_table_schema` returns field IDs/types/options but not display names —
-  read a few records to confirm names.
+- Write IDs, not display names. Linked-record fields take `["recXXXX"]`
+  arrays; select fields take the option name as a plain string.
+- `get_table_schema` returns IDs/types/options but no names.
+  `list_tables_for_base` returns names and field descriptions.
+- A `403 Invalid permissions` on `update_records_for_table` while reads work
+  means the connected Airtable account is read-only on the base (seen
+  2026-10-08 and 2026-10-12). Fix the account's base access; retrying won't
+  help.
+
+**Gmail:** the connector can't download attachments. Have a human upload the
+file or save it to Drive.
 
 **Google Drive:**
-- A global title search (e.g. `title contains 'SOW'`) pulls from all drives
-  the account can see, including JLX archives — don't rely on it to scope
-  results.
-- `parentId = '0AE8LR9pTzQbRUk9PVA'` returns top-level contents only, not
-  recursive. Walk subfolders explicitly via `parentId`, or use the uploaded
-  master tracker as source of truth.
-- File content is read via `json.loads(result[0]['text'])['fileContent']`.
+- Title searches span every drive the account can see, including JLX
+  archives. Don't rely on them to scope results.
+- `parentId = '<id>'` is not recursive; walk subfolders explicitly.
+- As of 2026-10-12 the Drive connection in the repo session can't see the
+  Project Tracking folder (`Requested entity was not found`). It needs to be
+  shared with that account.
 
-**HubSpot:** connected account is JLX's — searching Story As university
-names returns nothing, confirming Story As contacts aren't there yet.
+**Artifacts:** publishing the Whiteboard requires an explicit "publish it"
+from James. The auto-mode classifier blocks publishes driven only by a
+forwarded handoff prompt.
 
-## 7. Open items
+## 7. Routines
 
-- **Unlinked SOWs** — 14 SOW records have no matching Project row (NC State,
-  Princeton, UIC, USC, West Arete, Michigan, Texas, several Northwestern
-  sub-units). Decide whether to create Project rows for any of these.
-- **WISE SOW2** — reconcile a filed-status discrepancy noted during population.
-- **Duke StoryBank SOW1** — no matching Duke project row.
-- **"HMMB"** — appears in older notes, unidentified; suspected transcription error.
-- **Yale PRISE** — retainer doesn't start until September; open question in
-  its Next Action field (keep active now vs. hold).
-- **Weekly view** — a filtered/grouped view (by Parent Org, `# Needing
-  Attention > 0` rising to top) was proposed but not yet built.
+- **Ops inbox triage (Mon/Thu)**: `trig_01Ly6ShLdarBWXqftKXLMkKE`.
+  **Disabled 2026-10-12** at James's request. It ran on the pre-9/29 schema
+  and the Decisions table. Kept for its history; don't re-enable as-is.
+- **Weekly ACT Prep** (James's account): `trig_01RM56MVfrW33eLsFh76Do3v`,
+  disabled 9/29. Full prompt in `ACT_PREP_ROUTINE_PROMPT.md` in James's local
+  project folder. Needed changes are listed in `ROUTINE_MIGRATION_NOTES.md`.
+- **Simon's ACT prep routine**: James and Simon are installing it on Simon's
+  Claude account on 2026-10-13. It runs about noon every Monday, before ACT,
+  reads Simon's mail, and sets ACT Flags and Next Actions. Manual changes made
+  between runs (e.g. Win flags) will be overwritten on its next run; that's
+  expected.
+- Routine rules that carry over: draft email only, never send; append to
+  Notes, never delete; no sales flags; anything Story As vs. JLX goes to a
+  human.
 
-## 8. Current state snapshot (verified 2026-08-28)
+## 8. Current state snapshot (2026-10-12)
 
-- Projects table: 20 active rows (all Status = Active).
-- SOW table: 55 records — 41 linked, 14 unlinked (see §7).
-- Rollups live and reading correctly.
-- Five off-list status values normalized to controlled options, each noted
-  in that record's Notes field.
-- Six original out-of-scope rows deleted during rebuild: RENU, Kaplan, ABA,
-  Associated Colleges, NC State, and a blank orphan.
+- Projects: 40 rows: 20 Active, 2 Proposal (NC State PRTM, Michigan
+  Neuroscience), 18 Closed.
+- SOWs: about 65 rows. A 9/29 Drive audit (`sow_audit_2026-09-29.json`)
+  filled links, term dates and deliverables on most of them.
+- All SOWs are linked to a Project (the 14 orphans from 8/28 were resolved
+  on 8/28).
 
-## 9. Ongoing update process (started 2026-09-03)
+## 9. Open items (2026-10-12)
 
-**Goal:** stop relying on one-off rebuilds. Simon forwards tracking material
-(SOW updates, signed docs, new engagements) to a shared inbox; a recurring
-Claude routine reads it and keeps Projects/SOW current. Because this base is
-also meant to capture as much project history as possible for future use,
-prefer over-logging to silently dropping something forwarded.
-
-- **Intake inbox:** `ops@story.as`, a Google Group. James and Simon are
-  both members; the Claude session that runs the routine also needs to be
-  a member (or otherwise have read access) so forwarded mail is visible to it.
-- **Cadence:** twice weekly (target Monday + Thursday) — a scheduled Routine
-  checks the inbox and updates the tracker.
-- **Triage rule, per the normalize-don't-overwrite and entity-separation
-  principles in §0/§5:**
-  - Clear, unambiguous updates (e.g. a status flip to "Executed & Filed",
-    a confirmed sent/signed date) get written directly to the matching
-    SOW/Project record.
-  - Anything new, ambiguous, or requiring a judgment call — especially any
-    call on whether an item is Story As vs. JLX — is **not** auto-written.
-    It gets logged to the Decisions table (below) for Simon/James to
-    resolve, with the source email and any forwarded doc linked.
-- **Decisions table:** `tblCWLdCkpz3DETd4` in base `apph33yxxKNjn23Bj`,
-  created 2026-09-03. Schema documented in §3. This supersedes the ad hoc
-  §7 list going forward — new open items should be logged there instead
-  of edited into this file. §7 remains as the historical record of items
-  open as of the 2026-08-28 rebuild.
-- **Routine:** `trig_01Ly6ShLdarBWXqftKXLMkKE`, "Story As ops inbox triage
-  (Mon/Thu)", cron `0 12 * * 1,4` (Mon+Thu 8am America/New_York). Fires
-  into this same Claude session (self-bound) rather than a fresh one per
-  run — the org's trigger config doesn't allow passing connector grants
-  (Airtable/Gmail) to a fresh-session routine, so binding to a session
-  that already has both enabled was the only way to make it actually work.
-  **Consequence:** this only keeps working as long as Airtable and Gmail
-  stay enabled for this specific chat — if either gets disabled, the next
-  scheduled run will fail silently on missing tools. Verify after the
-  first run (2026-09-07) that it went through.
-- **ops@story.as membership unverified.** A Gmail search from james@story.as
-  for anything to/about `ops@story.as` (inbox, all mail, spam/trash) came
-  back with zero results as of 2026-09-03. That's consistent with "nothing
-  forwarded yet," but also with James not actually being a member of the
-  group — those look identical from a mailbox search. Send a test message
-  to the group and confirm it lands in James's inbox before relying on
-  the Monday run to catch real content.
+- **Airtable write access** for the repo session (read-only now). James is
+  fixing it. Queued changes from the 10/12 triage wait on it.
+- **Decisions table visibility**: confirm it still exists and grant access,
+  or choose a new home for open questions.
+- **Drive Project Tracking access** for the repo session's Google account.
+- **Trienens SOW12 and SOW13 signed PDFs** need filing in Drive, then
+  `SOW Document` links and Status → Executed & Filed.
+- **Michigan Neuroscience**: work is underway but the row is Proposal. Is the
+  SOW signed? James is sending a Drive link.
+- **Clients table split** (from 9/30 ACT): proposed, not approved.
