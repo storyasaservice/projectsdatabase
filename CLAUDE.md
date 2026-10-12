@@ -59,8 +59,7 @@ Two linked tables in one base.
 - ACT Headlines view (Projects, ACT Flag not empty, sorted on `Due`):
   `viwPepItyTxwcPj9K`
 - Decisions: `tblCWLdCkpz3DETd4` (created 2026-09-03). As of 2026-10-12 it is
-  **not visible** to the Airtable connection in the repo's Claude session,
-  most likely a permissions issue James is fixing, not a deletion.
+  **not in the base**, even with edit access. Probably deleted.
 
 ### Projects fields (live schema, 2026-10-12)
 
@@ -169,8 +168,9 @@ once the new one is confirmed.
   `list_tables_for_base` returns names and field descriptions.
 - A `403 Invalid permissions` on `update_records_for_table` while reads work
   means the connected Airtable account is read-only on the base (seen
-  2026-10-08 and 2026-10-12). Fix the account's base access; retrying won't
-  help.
+  2026-10-08 and 2026-10-12). Check with `list_bases`: `permissionLevel`
+  must be `edit`. Fixed 2026-10-12 by reconnecting the claude.ai Airtable
+  connector; retrying the write never helps.
 
 **Gmail:** the connector can't download attachments. Have a human upload the
 file or save it to Drive.
@@ -215,10 +215,9 @@ forwarded handoff prompt.
 
 ## 9. Open items (2026-10-12)
 
-- **Airtable write access** for the repo session (read-only now). James is
-  fixing it. Queued changes from the 10/12 triage wait on it.
-- **Decisions table visibility**: confirm it still exists and grant access,
-  or choose a new home for open questions.
+- **Decisions table**: not visible even after the connector was reconnected
+  with edit access on 10/12, so it was probably deleted. Confirm, and choose
+  a new home for open questions.
 - **Drive Project Tracking access** for the repo session's Google account.
 - **Trienens SOW12 and SOW13 signed PDFs** need filing in Drive, then
   `SOW Document` links and Status → Executed & Filed.
