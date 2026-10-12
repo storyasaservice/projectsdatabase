@@ -1,0 +1,621 @@
+<title>Story As Whiteboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a whiteboard wall — four marker columns (Issue → Due This Week → Win → Coming Up), proposals pinned in a tray underneath, card detail in a side drawer. */
+:root {
+  --board: #f6f7f5;
+  --grid: rgba(40, 60, 70, 0.055);
+  --ink: #1d2226;
+  --muted: #5c666e;
+  --card: #ffffff;
+  --card-hover: #fbfcfb;
+  --line: #d7ddd9;
+  --tray: #eceeeb;
+  --red: #c9302a;
+  --blue: #1d5cc0;
+  --green: #1b8448;
+  --graphite: #3a4147;
+  --chip: #eef1ef;
+  --shadow: 0 1px 0 rgba(20, 30, 35, 0.06), 0 2px 6px rgba(20, 30, 35, 0.05);
+  --f-marker: "Permanent Marker", "Marker Felt", "Comic Sans MS", cursive;
+  --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --board: #191d20; --grid: rgba(220, 235, 240, 0.045); --ink: #e7ebed; --muted: #98a2a9;
+    --card: #22282c; --card-hover: #283035; --line: #343c41; --tray: #1f2427;
+    --red: #ff6f62; --blue: #72a9ff; --green: #52c784; --graphite: #c6cdd2; --chip: #2b3236;
+    --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --board: #191d20; --grid: rgba(220, 235, 240, 0.045); --ink: #e7ebed; --muted: #98a2a9;
+  --card: #22282c; --card-hover: #283035; --line: #343c41; --tray: #1f2427;
+  --red: #ff6f62; --blue: #72a9ff; --green: #52c784; --graphite: #c6cdd2; --chip: #2b3236;
+  --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--board);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.wrap { max-width: 1440px; margin: 0 auto; padding-inline: 20px; padding-block: 20px 48px; display: flex; flex-direction: column; gap: 22px; }
+
+/* Header */
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+.brand h1 { font-family: var(--f-marker); font-weight: 400; font-size: clamp(28px, 4vw, 40px); line-height: 1; margin: 0; letter-spacing: 0.01em; text-wrap: balance; }
+.brand p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.fresh { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.btn {
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--card-hover); }
+.btn:focus-visible, .card:focus-visible, .chipbtn:focus-visible, .close:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn[disabled] { opacity: 0.55; cursor: default; }
+.btn a, a.btn { color: inherit; text-decoration: none; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.filters .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
+.chipbtn {
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--muted);
+  background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+}
+.chipbtn[aria-pressed="true"] { color: var(--card); background: var(--ink); border-color: var(--ink); }
+
+/* Status banner */
+.banner { border: 1px dashed var(--line); background: var(--card); border-radius: 8px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.banner strong { font-weight: 600; }
+.banner p { margin: 2px 0 0; color: var(--muted); }
+
+/* Board */
+.board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .board { grid-template-columns: minmax(0, 1fr); } }
+.col { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.col-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; color: var(--c); }
+.col-head h2 { font-family: var(--f-marker); font-weight: 400; font-size: 24px; line-height: 1.1; margin: 0; }
+.col-head .n { font-family: var(--f-marker); font-size: 22px; line-height: 1; }
+.squiggle { display: block; width: 100%; height: 8px; color: var(--c); margin-top: -4px; }
+.col[data-k="Issue"] { --c: var(--red); }
+.col[data-k="Due This Week"] { --c: var(--blue); }
+.col[data-k="Win"] { --c: var(--green); }
+.col[data-k="Coming Up"] { --c: var(--graphite); }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.empty { font-family: var(--f-marker); color: var(--muted); opacity: 0.7; font-size: 15px; padding: 10px 2px; }
+
+.card {
+  text-align: left; font: inherit; color: inherit; width: 100%;
+  background: var(--card); border: 1px solid var(--line); border-radius: 4px;
+  padding: 11px 12px 10px; box-shadow: var(--shadow); cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px; min-width: 0; position: relative;
+}
+.card:hover { background: var(--card-hover); }
+.card .pin { position: absolute; top: -5px; right: 12px; width: 11px; height: 11px; border-radius: 50%; background: var(--c); box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+.card .client { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding-right: 20px; }
+.card .what { font-weight: 600; font-size: 14.5px; line-height: 1.3; text-wrap: pretty; overflow-wrap: anywhere; }
+.card .next { color: var(--ink); opacity: 0.86; font-size: 13px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+.due { font-family: var(--f-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 3px; background: var(--chip); color: var(--ink); white-space: nowrap; }
+.due.late { background: var(--red); color: var(--card); }
+.due.soon { background: var(--blue); color: var(--card); }
+.who { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; }
+
+/* Tray */
+.tray { background: var(--tray); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.tray-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.tray-head h2 { font-family: var(--f-marker); font-weight: 400; font-size: 20px; margin: 0; color: var(--muted); }
+.tray-head p { margin: 0; font-size: 12px; color: var(--muted); }
+.tray .stack { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.tray .card { --c: var(--muted); }
+.foot { font-size: 12px; color: var(--muted); }
+
+/* Skeleton */
+.ghost { height: 92px; border-radius: 4px; border: 1px dashed var(--line); background: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+  .ghost { animation: breathe 1.6s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: 0.45; } }
+}
+
+/* Drawer */
+dialog.drawer {
+  margin: 0 0 0 auto; height: 100%; max-height: 100%; width: min(560px, 100%); max-width: 100%;
+  border: 0; border-left: 1px solid var(--line); padding: 0; background: var(--card); color: var(--ink);
+}
+dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
+.dr { display: flex; flex-direction: column; height: 100%; }
+.dr-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.dr-head .client { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.dr-head h3 { margin: 4px 0 0; font-size: 19px; line-height: 1.25; text-wrap: balance; }
+.flagtag { display: inline-block; margin-top: 8px; font-family: var(--f-marker); font-size: 15px; color: var(--c); }
+.close { font: inherit; font-size: 20px; line-height: 1; background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; width: 34px; height: 34px; cursor: pointer; flex: none; }
+.dr-body { padding: 16px 20px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.kv { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 6px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; padding-top: 2px; }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.sec h4 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.log li { border-left: 2px solid var(--line); padding-left: 12px; }
+.log li:first-child { border-left-color: var(--c, var(--ink)); }
+.log .d { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.log .t { margin-top: 2px; font-size: 13.5px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 65ch; }
+.sows { display: flex; flex-wrap: wrap; gap: 6px; }
+.sows span { font-size: 12px; background: var(--chip); border-radius: 3px; padding: 2px 8px; }
+.dr-foot { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Story As Whiteboard</h1>
+      <p id="sub">Live from the Story As Airtable base · <span id="today"></span></p>
+    </div>
+    <div class="meta">
+      <span class="fresh" id="fresh" aria-live="polite"></span>
+      <button class="btn" id="refresh" type="button">Refresh</button>
+      <a class="btn" id="open-at" href="https://airtable.com/apph33yxxKNjn23Bj/tblERbkBOwDY4WsMV/viwPepItyTxwcPj9K" target="_blank" rel="noopener">Open in Airtable ↗</a>
+    </div>
+  </header>
+
+  <div class="filters" id="filters" hidden>
+    <span class="lbl">Who</span>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main class="board" id="board" aria-label="Active projects by ACT flag"></main>
+
+  <section class="tray" id="tray" hidden aria-label="Proposals">
+    <div class="tray-head">
+      <h2>Pipeline</h2>
+      <p>Proposals and unsigned work · no flags, tracked by Simon in HubSpot</p>
+    </div>
+    <div class="stack" id="tray-stack"></div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<dialog class="drawer" id="drawer" aria-labelledby="dr-title">
+  <div class="dr" id="dr"></div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  var SERVER = "Airtable";
+  var TOOL = "list_records_for_table";
+  var BASE = "apph33yxxKNjn23Bj";
+  var TABLE = "tblERbkBOwDY4WsMV";
+  var VIEW = "viwPepItyTxwcPj9K";
+  var F = {
+    project: "fldDRRUGOxDudM0zO",
+    client: "fldkBb2clHrhCUETA",
+    status: "fld7cX7gulOI2Z3Mg",
+    notes: "fldkcnkZCVCDm2ur9",
+    next: "fldl36WJAPPzJWh29",
+    due: "fldzBD35sasrNRos6",
+    flag: "fldMEtAAai6aqfMOu",
+    poc: "fld2KZ8MrMiPC9yT1",
+    sows: "fld5FahVTcPKhDv2x",
+    who: "fld3aQFBjfYcGrhp9",
+    termEnd: "fldj9PNzOGgKus5Bj"
+  };
+  var INPUT = {
+    baseId: BASE,
+    tableId: TABLE,
+    fieldIds: [F.project, F.client, F.status, F.notes, F.next, F.due, F.flag, F.poc, F.sows, F.who, F.termEnd],
+    pageSize: 500
+  };
+  var COLS = [
+    { k: "Issue", label: "Issue", empty: "Nothing on fire." },
+    { k: "Due This Week", label: "Due This Week", empty: "Nothing due this week." },
+    { k: "Win", label: "Win", empty: "No wins logged yet." },
+    { k: "Coming Up", label: "Coming Up", empty: "Nothing queued." }
+  ];
+  var FLAG_COLOR = { "Issue": "var(--red)", "Due This Week": "var(--blue)", "Win": "var(--green)", "Coming Up": "var(--graphite)" };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { records: null, storedAt: null, who: "All" };
+  try { var w = localStorage.getItem("sa-wb-who"); if (w) state.who = w; } catch (e) {}
+
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  $("today").textContent = today.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  // ---------- helpers ----------
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function sel(v) { return v && typeof v === "object" ? (v.name || "") : (v || ""); }
+  function multi(v) { return Array.isArray(v) ? v.map(sel).filter(Boolean) : []; }
+  function parseDate(s) {
+    if (!s || typeof s !== "string") return null;
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return new Date(+m[1], +m[2] - 1, +m[3]);
+  }
+  function dueInfo(s) {
+    var d = parseDate(s);
+    if (!d) return null;
+    var days = Math.round((d - today) / 86400000);
+    var short = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    var wk = d.toLocaleDateString(undefined, { weekday: "short" });
+    var rel, cls = "";
+    if (days < 0) { rel = "overdue " + (-days) + "d"; cls = "late"; }
+    else if (days === 0) { rel = "today"; cls = "soon"; }
+    else if (days === 1) { rel = "tomorrow"; cls = "soon"; }
+    else if (days <= 6) { rel = "in " + days + "d"; cls = "soon"; }
+    else { rel = "in " + days + "d"; }
+    return { text: wk + " " + short + " · " + rel, cls: cls, days: days };
+  }
+  function splitName(project, client) {
+    var p = project || "";
+    var i = p.indexOf(" — ");
+    if (i > 0) return { client: p.slice(0, i), what: p.slice(i + 3) };
+    return { client: client || "", what: p || "(untitled)" };
+  }
+  function parseNotes(text) {
+    if (!text) return [];
+    var parts = String(text).split(/\n\s*\n(?=\[Status )/);
+    var out = [];
+    parts.forEach(function (chunk, idx) {
+      var m = chunk.match(/^\[Status ([^\]]+)\]\s*/);
+      if (m) out.push({ d: m[1], t: chunk.slice(m[0].length).trim() });
+      else if (chunk.trim()) out.push({ d: idx === 0 ? "Background" : "", t: chunk.trim() });
+    });
+    var bg = out.filter(function (x) { return x.d === "Background"; });
+    var dated = out.filter(function (x) { return x.d !== "Background"; }).reverse();
+    return dated.concat(bg);
+  }
+  function relTime(ms) {
+    var s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (s < 45) return "just now";
+    var m = Math.round(s / 60);
+    if (m < 60) return m + " min ago";
+    var h = Math.round(m / 60);
+    if (h < 24) return h + " h ago";
+    return new Date(ms).toLocaleString();
+  }
+
+  // ---------- normalise rows ----------
+  function normalise(payload) {
+    var recs = payload && (payload.records || (payload.result && payload.result.records));
+    if (!Array.isArray(recs)) return null;
+    return recs.map(function (r) {
+      var c = r.cellValuesByFieldId || r.fields || {};
+      var names = splitName(c[F.project], c[F.client]);
+      return {
+        id: r.id,
+        project: c[F.project] || "",
+        client: names.client,
+        what: names.what,
+        clientFull: c[F.client] || "",
+        status: sel(c[F.status]),
+        flag: sel(c[F.flag]),
+        next: c[F.next] || "",
+        due: c[F.due] || "",
+        poc: c[F.poc] || "",
+        notes: c[F.notes] || "",
+        sows: Array.isArray(c[F.sows]) ? c[F.sows].map(function (s) { return s && s.name ? s.name : String(s); }) : [],
+        who: multi(c[F.who]),
+        termEnd: Array.isArray(c[F.termEnd]) ? c[F.termEnd][0] : c[F.termEnd]
+      };
+    });
+  }
+
+  // ---------- render ----------
+  function squiggle() {
+    var s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("class", "squiggle");
+    s.setAttribute("viewBox", "0 0 200 8");
+    s.setAttribute("preserveAspectRatio", "none");
+    s.setAttribute("aria-hidden", "true");
+    var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", "M2 5 C 30 1, 55 8, 85 4 S 140 2, 170 5 S 192 4, 198 3");
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", "currentColor");
+    p.setAttribute("stroke-width", "2.5");
+    p.setAttribute("stroke-linecap", "round");
+    s.appendChild(p);
+    return s;
+  }
+  function byDue(a, b) {
+    var da = parseDate(a.due), db = parseDate(b.due);
+    if (da && db) return da - db;
+    if (da) return -1;
+    if (db) return 1;
+    return a.project.localeCompare(b.project);
+  }
+  function card(r, colorVar) {
+    var b = el("button", "card");
+    b.type = "button";
+    if (colorVar) b.style.setProperty("--c", colorVar);
+    b.appendChild(el("span", "pin"));
+    b.appendChild(el("span", "client", r.client));
+    b.appendChild(el("span", "what", r.what));
+    if (r.next) b.appendChild(el("span", "next", r.next));
+    var row = el("span", "row");
+    var di = dueInfo(r.due);
+    if (di) row.appendChild(el("span", "due " + di.cls, di.text));
+    r.who.forEach(function (w) { row.appendChild(el("span", "who", w)); });
+    if (row.childNodes.length) b.appendChild(row);
+    b.setAttribute("aria-label", r.project + (r.next ? ". " + r.next : ""));
+    b.addEventListener("click", function () { openDrawer(r); });
+    return b;
+  }
+  function renderSkeleton() {
+    var board = $("board");
+    board.replaceChildren();
+    COLS.forEach(function (c) {
+      var col = el("section", "col");
+      col.dataset.k = c.k;
+      var h = el("div", "col-head");
+      h.appendChild(el("h2", null, c.label));
+      h.appendChild(el("span", "n", "·"));
+      col.appendChild(h);
+      col.appendChild(squiggle());
+      var st = el("div", "stack");
+      for (var i = 0; i < (c.k === "Coming Up" ? 4 : 2); i++) st.appendChild(el("div", "ghost"));
+      col.appendChild(st);
+      board.appendChild(col);
+    });
+  }
+  function renderFilters(rows) {
+    var people = {};
+    rows.forEach(function (r) { r.who.forEach(function (w) { people[w] = 1; }); });
+    var names = Object.keys(people).sort();
+    var box = $("filters");
+    box.querySelectorAll(".chipbtn").forEach(function (n) { n.remove(); });
+    if (!names.length) { box.hidden = true; state.who = "All"; return; }
+    if (state.who !== "All" && !people[state.who]) state.who = "All";
+    ["All"].concat(names).forEach(function (n) {
+      var b = el("button", "chipbtn", n);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.who === n));
+      b.addEventListener("click", function () {
+        state.who = n;
+        try { localStorage.setItem("sa-wb-who", n); } catch (e) {}
+        render();
+      });
+      box.appendChild(b);
+    });
+    box.hidden = false;
+  }
+  function render() {
+    var rows = state.records;
+    if (!rows) return;
+    renderFilters(rows);
+    var vis = rows.filter(function (r) { return state.who === "All" || r.who.indexOf(state.who) >= 0; });
+    var active = vis.filter(function (r) { return r.status === "Active"; });
+    var proposals = vis.filter(function (r) { return r.status === "Proposal" || r.status === "Prospect"; });
+    var closed = rows.filter(function (r) { return r.status === "Closed"; }).length;
+
+    var board = $("board");
+    board.replaceChildren();
+    COLS.forEach(function (c) {
+      var items = active.filter(function (r) {
+        return c.k === "Coming Up" ? (r.flag === "Coming Up" || !r.flag || !FLAG_COLOR[r.flag]) : r.flag === c.k;
+      }).sort(byDue);
+      var col = el("section", "col");
+      col.dataset.k = c.k;
+      col.setAttribute("aria-label", c.label + ", " + items.length);
+      var h = el("div", "col-head");
+      h.appendChild(el("h2", null, c.label));
+      h.appendChild(el("span", "n", String(items.length)));
+      col.appendChild(h);
+      col.appendChild(squiggle());
+      var st = el("div", "stack");
+      if (!items.length) st.appendChild(el("div", "empty", c.empty));
+      items.forEach(function (r) { st.appendChild(card(r, FLAG_COLOR[c.k])); });
+      col.appendChild(st);
+      board.appendChild(col);
+    });
+
+    var tray = $("tray"), ts = $("tray-stack");
+    ts.replaceChildren();
+    proposals.sort(function (a, b) { return a.project.localeCompare(b.project); })
+      .forEach(function (r) { ts.appendChild(card(r, null)); });
+    tray.hidden = proposals.length === 0;
+
+    $("foot").textContent = active.length + " active · " + proposals.length + " in pipeline · " + closed + " closed (not shown)";
+    renderFresh();
+  }
+  function renderFresh() {
+    $("fresh").textContent = state.storedAt ? "Updated " + relTime(state.storedAt) : "";
+  }
+  setInterval(renderFresh, 30000);
+
+  // ---------- drawer ----------
+  function openDrawer(r) {
+    var dr = $("dr");
+    dr.replaceChildren();
+    var color = FLAG_COLOR[r.flag] || "var(--muted)";
+    dr.style.setProperty("--c", color);
+
+    var head = el("div", "dr-head");
+    var hl = el("div");
+    hl.appendChild(el("div", "client", r.client));
+    var h3 = el("h3", null, r.what); h3.id = "dr-title";
+    hl.appendChild(h3);
+    hl.appendChild(el("span", "flagtag", r.status === "Active" ? (r.flag || "No flag") : r.status));
+    head.appendChild(hl);
+    var x = el("button", "close", "×"); x.type = "button"; x.setAttribute("aria-label", "Close");
+    x.addEventListener("click", function () { $("drawer").close(); });
+    head.appendChild(x);
+    dr.appendChild(head);
+
+    var body = el("div", "dr-body");
+    var kv = el("dl", "kv");
+    function add(k, v) { if (!v) return; kv.appendChild(el("dt", null, k)); kv.appendChild(el("dd", null, v)); }
+    add("Next", r.next);
+    var di = dueInfo(r.due); add("Due", di ? di.text : "");
+    add("Client", r.clientFull);
+    add("Contact", r.poc);
+    add("Team", r.who.join(", "));
+    var te = dueInfo(r.termEnd); add("SOW ends", te ? te.text.split(" · ")[0] : "");
+    body.appendChild(kv);
+
+    if (r.sows.length) {
+      var s = el("div", "sec"); s.appendChild(el("h4", null, "Statements of work"));
+      var sw = el("div", "sows"); r.sows.forEach(function (n) { sw.appendChild(el("span", null, n)); });
+      s.appendChild(sw); body.appendChild(s);
+    }
+    var log = parseNotes(r.notes);
+    if (log.length) {
+      var ls = el("div", "sec"); ls.appendChild(el("h4", null, "Status history · newest first"));
+      var ul = el("ul", "log");
+      log.forEach(function (e) {
+        var li = el("li");
+        if (e.d) li.appendChild(el("div", "d", e.d));
+        li.appendChild(el("div", "t", e.t));
+        ul.appendChild(li);
+      });
+      ls.appendChild(ul); body.appendChild(ls);
+    }
+    dr.appendChild(body);
+
+    var foot = el("div", "dr-foot");
+    var a = el("a", "btn", "Edit in Airtable ↗");
+    a.href = "https://airtable.com/" + BASE + "/" + TABLE + "/" + VIEW + "/" + r.id;
+    a.target = "_blank"; a.rel = "noopener";
+    foot.appendChild(a);
+    dr.appendChild(foot);
+
+    var d = $("drawer");
+    if (typeof d.showModal === "function") { if (!d.open) d.showModal(); } else d.setAttribute("open", "");
+  }
+  $("drawer").addEventListener("click", function (e) { if (e.target === this) this.close(); });
+
+  // ---------- banner ----------
+  function banner(title, detail, action) {
+    var b = $("banner");
+    b.replaceChildren();
+    var t = el("div");
+    t.appendChild(el("strong", null, title));
+    if (detail) t.appendChild(el("p", null, detail));
+    b.appendChild(t);
+    if (action) b.appendChild(action);
+    b.hidden = false;
+  }
+  function clearBanner() { $("banner").hidden = true; }
+  function retract() {
+    state.records = null; state.storedAt = null;
+    $("board").replaceChildren(); $("tray").hidden = true; $("filters").hidden = true;
+    $("foot").textContent = ""; $("fresh").textContent = "";
+  }
+
+  // ---------- data ----------
+  var mcp = null, unwatch = null;
+
+  function handleError(err) {
+    var code = err && err.code;
+    var stale = !!state.records;
+    switch (code) {
+      case "needs_reauth":
+        retract();
+        banner("Reconnect Airtable to load the board", "Your Airtable connection expired. Reconnect it in claude.ai Settings → Connectors, then refresh.");
+        break;
+      case "server_not_connected":
+      case "server_not_found":
+        retract();
+        banner("Add the Airtable connector to see the board", "This page reads the Story As base with your own Airtable access. Add Airtable in claude.ai Settings → Connectors, then refresh.");
+        break;
+      case "selection_required":
+        retract();
+        banner("Choose which Airtable connection to use", "You have more than one Airtable connector. Pick one when claude.ai asks, then refresh.");
+        break;
+      case "not_in_manifest":
+      case "not_granted":
+      case "consent_required":
+        retract();
+        var btn = el("button", "btn", "Allow Airtable");
+        btn.type = "button";
+        btn.addEventListener("click", function () { loadOnce(); });
+        banner("Airtable access is off for this page", "The board needs permission to read the Story As base through your Airtable connector.", btn);
+        break;
+      case "approval_required":
+        var ab = el("button", "btn", "Approve and load");
+        ab.type = "button";
+        ab.addEventListener("click", function () { loadOnce(); });
+        banner("Airtable needs your approval", "Approve the read once and the board will load.", ab);
+        break;
+      case "blocked_by_policy":
+        retract();
+        banner("Your organization blocks this Airtable read", "An admin policy stops this page from reading Airtable for your account.");
+        break;
+      case "tool_error":
+        banner(stale ? "Showing the last board — Airtable reported an error" : "Airtable reported an error", (err && err.message) || "Check that you can open the Story As base in Airtable.");
+        break;
+      case "server_unavailable":
+      case "rate_limited":
+        banner(stale ? "Showing the last board — Airtable is not answering" : "Airtable is not answering right now", "It usually comes back within a minute. Use Refresh to try again.");
+        break;
+      case "capability_disabled":
+      case "capability_removed":
+        noMcp();
+        break;
+      default:
+        banner(stale ? "Showing the last board — the refresh failed" : "The board could not load", (err && err.message) || "Use Refresh to try again.");
+    }
+  }
+  function onData(result) {
+    var payload = result && (result.payload !== undefined ? result.payload : result.structuredContent);
+    if (typeof payload === "string") { try { payload = JSON.parse(payload); } catch (e) {} }
+    var rows = normalise(payload);
+    if (!rows) { handleError({ code: "tool_error", message: "Airtable answered, but not with a list of projects." }); return; }
+    clearBanner();
+    state.records = rows;
+    state.storedAt = result.cache && result.cache.storedAt ? result.cache.storedAt : Date.now();
+    render();
+  }
+  function startWatch() {
+    if (unwatch) { try { unwatch(); } catch (e) {} unwatch = null; }
+    unwatch = mcp.watchTool(SERVER, TOOL, INPUT, function (ev) {
+      if (ev.type === "data") onData(ev.result);
+      else handleError(ev.error);
+    }, { cache: { staleTime: 60000, gcTime: 3600000 }, refetchInterval: 300000 });
+  }
+  function loadOnce() {
+    if (!mcp) return;
+    var r = $("refresh"); r.disabled = true;
+    mcp.callTool(SERVER, TOOL, INPUT, { cache: { refresh: true, gcTime: 3600000 } })
+      .then(function (res) { onData(res); startWatch(); })
+      .catch(handleError)
+      .finally(function () { r.disabled = false; });
+  }
+  function noMcp() {
+    retract();
+    banner("Open this board in claude.ai", "It reads Airtable live through your claude.ai connectors, which only works inside the claude.ai viewer.");
+    $("refresh").disabled = true;
+  }
+
+  $("refresh").addEventListener("click", function () { loadOnce(); });
+
+  renderSkeleton();
+  if (!window.claude || typeof window.claude.use !== "function") { noMcp(); return; }
+  window.claude.use("mcp").then(function (ns) {
+    if (!ns) { noMcp(); return; }
+    mcp = ns;
+    startWatch();
+  }, noMcp);
+})();
+</script>
