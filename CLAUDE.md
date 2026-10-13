@@ -130,7 +130,7 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 |---|---|---|
 | Google Drive | Story As shared drive (source SOW/MSA documents) | `0AE8LR9pTzQbRUk9PVA` |
 | Drive folder | **Clients** (shared with james@story.as): one subfolder per client, holding SOWs and work files. The repo session's Drive connection can read it | `1gJjAicV-FFM4Y1yVq2jAaDWFqKrIoWQz` |
-| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Start with the `0 · START HERE` index doc. Subfolders: `1 · Decision log` (`1NMILdOnylW4fHpyn4W9G_xjEO3Nq4TN2`, `SOW_population_log_*`), `2 · ACT prep logs` (`1wMKxM3cfqC6sfM99SRfhc-9sp49SGQHR`), `3 · Simon` (`1WZcRfMOzdpmhKMNB_eQTnKAeFTNfGnBR`), `4 · How the system works` (`17F37jDCUXwlCJkPq87p_TD4hOajRbT0j`, includes the **Tools & limitations** doc). New files go straight into the right subfolder | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
+| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Flat layout: `0 · START HERE` index, Tools & limitations, the latest decision log (`SOW_population_log_*`), the latest ACT prep log, Questions_for_Simon, Simon's routine setup. Everything older goes in **Archive** (`13R7bogMArKydWbWoRyGzrOlJzn8DfkK7`). New logs go at the top level; when a new one lands, move the previous one to Archive (by hand: the connector can't move files here) | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
 | Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
 | Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
 | Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
@@ -228,9 +228,9 @@ forwarded handoff prompt.
 - **Decisions table**: not visible even after the connector was reconnected
   with edit access on 10/12, so it was probably deleted. Confirm, and choose
   a new home for open questions.
-- **Project Tracking file moves**: 16 older files sit at the folder's top
-  level. The connector can't move them (shared drive), so James moves them
-  per the START HERE index. An Archive folder is being discussed.
+- **Project Tracking tidy-up**: a few files still need dragging and the old
+  numbered folders deleting; the list is in the START HERE doc's "Still to
+  move" section.
 - **Michigan Neuroscience**: work is underway but the row is Proposal. Is the
   SOW signed? Empty folder Clients › University of Michigan
   (`1CB9tT7Y4nR4ap882RkoifCL28RXbIv7I`) created 10/12 for it.
