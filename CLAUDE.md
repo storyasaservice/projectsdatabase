@@ -130,7 +130,7 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 |---|---|---|
 | Google Drive | Story As shared drive (source SOW/MSA documents) | `0AE8LR9pTzQbRUk9PVA` |
 | Drive folder | **Clients** (shared with james@story.as): one subfolder per client, holding SOWs and work files. The repo session's Drive connection can read it | `1gJjAicV-FFM4Y1yVq2jAaDWFqKrIoWQz` |
-| Drive folder | **Project Tracking**: decision log (`SOW_population_log*`), ACT prep logs, Questions_for_Simon | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
+| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Start with the `0 · START HERE` index doc. Subfolders: `1 · Decision log` (`1NMILdOnylW4fHpyn4W9G_xjEO3Nq4TN2`, `SOW_population_log_*`), `2 · ACT prep logs` (`1wMKxM3cfqC6sfM99SRfhc-9sp49SGQHR`), `3 · Simon` (`1WZcRfMOzdpmhKMNB_eQTnKAeFTNfGnBR`), `4 · How the system works` (`17F37jDCUXwlCJkPq87p_TD4hOajRbT0j`, includes the **Tools & limitations** doc). New files go straight into the right subfolder | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
 | Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
 | Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
 | Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
@@ -173,16 +173,22 @@ once the new one is confirmed.
   must be `edit`. Fixed 2026-10-12 by reconnecting the claude.ai Airtable
   connector; retrying the write never helps.
 
-**Gmail:** the connector can't download attachments. Have a human upload the
-file or save it to Drive.
+**Gmail:** the connector can't download attachments. A person saves signed SOWs
+to the client's folder in Clients (Gmail "Add to Drive", or drag and drop);
+then Claude reads, links and updates. James decided 10/13 to keep it this
+simple: no automatic attachment pipeline for now. An Apps Script intake on
+Simon's account is the option on file if that changes. Full write-up: the
+Tools & limitations doc in Project Tracking › 4.
 
 **Google Drive:**
 - Title searches span every drive the account can see, including JLX
   archives. Don't rely on them to scope results.
 - `parentId = '<id>'` is not recursive; walk subfolders explicitly.
-- As of 2026-10-12 the Drive connection in the repo session can't see the
-  Project Tracking folder (`Requested entity was not found`). It needs to be
-  shared with that account.
+- Drive can only move or rename files the connected account **owns**
+  (`The caller does not have permission` otherwise). It can read anything
+  shared with it, and create folders and Google Docs (`create_file` with
+  `text/html` content converts to a Doc). Uploading a PDF through the
+  connector isn't practical; a person uploads it.
 
 **Artifacts:** publishing the Whiteboard requires an explicit "publish it"
 from James. The auto-mode classifier blocks publishes driven only by a
@@ -219,9 +225,15 @@ forwarded handoff prompt.
 - **Decisions table**: not visible even after the connector was reconnected
   with edit access on 10/12, so it was probably deleted. Confirm, and choose
   a new home for open questions.
-- **Drive Project Tracking access** for the repo session's Google account.
-- **Trienens SOW12 and SOW13 signed PDFs** need filing in Drive, then
-  `SOW Document` links and Status → Executed & Filed.
+- **Project Tracking file moves**: 16 older files sit at the folder's top
+  level, owned by another account. James moves them per the START HERE
+  index.
 - **Michigan Neuroscience**: work is underway but the row is Proposal. Is the
-  SOW signed? James is sending a Drive link.
+  SOW signed? Empty folder Clients › University of Michigan
+  (`1CB9tT7Y4nR4ap882RkoifCL28RXbIv7I`) created 10/12 for it.
+- **Trienens SOW13 PDF** sits loose in Clients › Trienen's Institute; its
+  owner can move it into the `SOW` subfolder. SOW12 and SOW13 are both
+  linked and Executed & Filed as of 10/13.
+- **Duke Climate Commitment Notes** hold financial figures from an earlier
+  run (10/12 entry). James may delete them by hand.
 - **Clients table split** (from 9/30 ACT): proposed, not approved.
