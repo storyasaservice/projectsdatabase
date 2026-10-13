@@ -228,9 +228,6 @@ forwarded handoff prompt.
 - **Decisions table**: not visible even after the connector was reconnected
   with edit access on 10/12, so it was probably deleted. Confirm, and choose
   a new home for open questions.
-- **Project Tracking tidy-up**: a few files still need dragging and the old
-  numbered folders deleting; the list is in the START HERE doc's "Still to
-  move" section.
 - **Michigan Neuroscience**: work is underway but the row is Proposal. Is the
   SOW signed? Empty folder Clients › University of Michigan
   (`1CB9tT7Y4nR4ap882RkoifCL28RXbIv7I`) created 10/12 for it.
