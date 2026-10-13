@@ -134,7 +134,7 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 |---|---|---|
 | Google Drive | Story As shared drive (source SOW/MSA documents) | `0AE8LR9pTzQbRUk9PVA` |
 | Drive folder | **Clients** (shared with james@story.as): one subfolder per client, holding SOWs and work files. The repo session's Drive connection can read it | `1gJjAicV-FFM4Y1yVq2jAaDWFqKrIoWQz` |
-| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Flat layout: `0 · START HERE` index, Tools & limitations, the latest decision log (`SOW_population_log_*`), the latest ACT prep log, Questions_for_Simon, Simon's routine setup. Everything older goes in **Archive** (`13R7bogMArKydWbWoRyGzrOlJzn8DfkK7`). New logs go at the top level; when a new one lands, move the previous one to Archive (by hand: the connector can't move files here). Naming (10/13): standing docs `0 · START HERE`, `1 · Tools & limitations`, `2 · Questions for Simon`, `3 · Simon's ACT prep routine setup`; session logs `Log · YYYY-MM-DD · what it covers`; ACT prep runs `ACT prep · YYYY-MM-DD`. Renaming works through the connector even though moving doesn't | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
+| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Flat layout: `0 · START HERE` index, Tools & limitations, the latest decision log (`SOW_population_log_*`), the latest ACT prep log, Questions_for_Simon, Simon's routine setup. Everything older goes in **Archive** (`13R7bogMArKydWbWoRyGzrOlJzn8DfkK7`). New logs go at the top level; when a new one lands, move the previous one to Archive (by hand: the connector can't move files here). Naming (10/13): standing docs `0 · START HERE`, `1 · Tools & limitations`, `2 · Questions for Simon`, `3 · ACT prep routine instructions`, `4 · Routine setup (one time)` (archive once Simon's routine runs); session logs `Log · YYYY-MM-DD · what it covers`; ACT prep runs `ACT prep · YYYY-MM-DD`. Renaming works through the connector even though moving doesn't | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
 | Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
 | Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
 | Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
@@ -212,9 +212,10 @@ forwarded handoff prompt.
 - **Simon's ACT prep routine**: runs on Simon's Claude account, Mondays at
   12:00 PM Eastern, before ACT. Routines can't be shared or handed between
   claude.ai accounts, so its prompt is one line that tells it to open the doc
-  `3 · Simon's ACT prep routine setup`
-  (`1Y7Zqfm_gniuh7PZuS1KsjOdWXnGuQGT39AJAqz8AX9A`) and follow its "Routine
-  instructions" section. **To change what the routine does, edit that doc**,
+  `3 · ACT prep routine instructions`
+  (`1Y7Zqfm_gniuh7PZuS1KsjOdWXnGuQGT39AJAqz8AX9A`), which holds only the
+  routine's instructions, and follow it. Setup steps are in the separate
+  `4 · Routine setup (one time)` doc. **To change what the routine does, edit doc 3**,
   not the routine; only the schedule and connectors live on the routine
   itself. Simon's connectors must reach that doc, the base (Editor on Story
   As Primary Workspace), his Gmail and Calendar, and the shared drive. Manual
