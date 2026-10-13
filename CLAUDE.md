@@ -54,6 +54,10 @@ Two linked tables in one base.
 ## 3. Airtable IDs and fields
 
 - Base: `apph33yxxKNjn23Bj` — https://airtable.com/apph33yxxKNjn23Bj
+- Workspace: **Story As Primary Workspace** (`wsptEf3s31waD0PG7`), owned by
+  the Story As Airtable account. James moved the base here from the JLX
+  workspace on 2026-10-13 with Airtable's Move base; the base ID, table IDs,
+  field IDs and record IDs all stayed the same (verified after the move).
 - Projects: `tblERbkBOwDY4WsMV`
 - SOWs: `tblRnLtee8fTaI57w`
 - ACT Headlines view (Projects, ACT Flag not empty, sorted on `Due`):
