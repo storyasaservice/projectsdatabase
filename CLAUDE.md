@@ -209,11 +209,17 @@ forwarded handoff prompt.
 - **Weekly ACT Prep** (James's account): `trig_01RM56MVfrW33eLsFh76Do3v`,
   disabled 9/29. Full prompt in `ACT_PREP_ROUTINE_PROMPT.md` in James's local
   project folder. Needed changes are listed in `ROUTINE_MIGRATION_NOTES.md`.
-- **Simon's ACT prep routine**: James and Simon are installing it on Simon's
-  Claude account on 2026-10-13. It runs about noon every Monday, before ACT,
-  reads Simon's mail, and sets ACT Flags and Next Actions. Manual changes made
-  between runs (e.g. Win flags) will be overwritten on its next run; that's
-  expected.
+- **Simon's ACT prep routine**: runs on Simon's Claude account, Mondays at
+  12:00 PM Eastern, before ACT. Routines can't be shared or handed between
+  claude.ai accounts, so its prompt is one line that tells it to open the doc
+  `3 · Simon's ACT prep routine setup`
+  (`1Y7Zqfm_gniuh7PZuS1KsjOdWXnGuQGT39AJAqz8AX9A`) and follow its "Routine
+  instructions" section. **To change what the routine does, edit that doc**,
+  not the routine; only the schedule and connectors live on the routine
+  itself. Simon's connectors must reach that doc, the base (Editor on Story
+  As Primary Workspace), his Gmail and Calendar, and the shared drive. Manual
+  Airtable edits made between runs (e.g. Win flags) may be overwritten on
+  its next run; that's expected.
 - Routine rules that carry over: draft email only, never send; append to
   Notes, never delete; no sales flags; anything Story As vs. JLX goes to a
   human.
