@@ -184,8 +184,11 @@ Tools & limitations doc in Project Tracking › 4.
 - Title searches span every drive the account can see, including JLX
   archives. Don't rely on them to scope results.
 - `parentId = '<id>'` is not recursive; walk subfolders explicitly.
-- Drive can only move or rename files the connected account **owns**
-  (`The caller does not have permission` otherwise). It can read anything
+- The Drive connector **can't move files inside the Story As shared drive**,
+  not even ones it just created (`The caller does not have permission`),
+  although james@story.as is a Content manager there (role
+  `fileOrganizer`). Probably the connector lacks shared-drive support for
+  moves. A person moves files by hand. It can read anything
   shared with it, and create folders and Google Docs (`create_file` with
   `text/html` content converts to a Doc). Uploading a PDF through the
   connector isn't practical; a person uploads it.
@@ -226,13 +229,13 @@ forwarded handoff prompt.
   with edit access on 10/12, so it was probably deleted. Confirm, and choose
   a new home for open questions.
 - **Project Tracking file moves**: 16 older files sit at the folder's top
-  level, owned by another account. James moves them per the START HERE
-  index.
+  level. The connector can't move them (shared drive), so James moves them
+  per the START HERE index. An Archive folder is being discussed.
 - **Michigan Neuroscience**: work is underway but the row is Proposal. Is the
   SOW signed? Empty folder Clients › University of Michigan
   (`1CB9tT7Y4nR4ap882RkoifCL28RXbIv7I`) created 10/12 for it.
-- **Trienens SOW13 PDF** sits loose in Clients › Trienen's Institute; its
-  owner can move it into the `SOW` subfolder. SOW12 and SOW13 are both
+- **Trienens SOW13 PDF** sits loose in Clients › Trienen's Institute; a
+  person has to move it into the `SOW` subfolder. SOW12 and SOW13 are both
   linked and Executed & Filed as of 10/13.
 - **Duke Climate Commitment Notes** hold financial figures from an earlier
   run (10/12 entry). James may delete them by hand.
