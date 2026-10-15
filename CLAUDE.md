@@ -65,8 +65,11 @@ Two linked tables in one base.
 - ACT Headlines view (Projects, ACT Flag not empty, sorted on `Due`):
   `viwPepItyTxwcPj9K`
 - Decisions: `tblCWLdCkpz3DETd4` (created 2026-09-03) is **gone** from the
-  base. Open questions live in the `2 · Questions for Simon` doc in Project
-  Tracking instead.
+  base.
+- Questions: `tblezlMZ5zJbua29I` (added 2026-10-15). Things Simon (or
+  James/Jason) needs to explain or decide: contract gaps, missing signed
+  copies, odd dates. Not delivery issues (those use ACT Flag). Replaces the
+  old `2 · Questions for Simon` doc, which is kept for history.
 
 ### Projects fields (live schema, 2026-10-12)
 
@@ -76,7 +79,7 @@ Two linked tables in one base.
 | Client | fldkBb2clHrhCUETA | singleLineText | Specific client/sub-unit |
 | Status | fld7cX7gulOI2Z3Mg | singleSelect | Active / Prospect / Proposal / Closed |
 | Notes | fldkcnkZCVCDm2ur9 | multilineText | **Append only.** Dated history; old Next Actions land here |
-| Next Action | fldl36WJAPPzJWh29 | multilineText | Only a clear due deliverable: "Due M/D — what". Blank is normal |
+| Next Action | fldl36WJAPPzJWh29 | multilineText | "Due M/D — what". Live but undated work: "Due TBD — what" with Due blank (Whiteboard tag "Date TBD"). Blank only when nothing specific is in progress |
 | Due | fldzBD35sasrNRos6 | date | Date of the Next Action deliverable. Set and clear together with Next Action |
 | ACT Flag | fldMEtAAai6aqfMOu | singleSelect | See ACT rules below |
 | Card Line | flde7ZQbRqXa7ZQl0 | singleLineText | Added 10/15. The one line the Whiteboard card shows: WHY the row has its flag. Rewritten, not appended. See ACT rules |
@@ -86,7 +89,7 @@ Two linked tables in one base.
 | Assigned To | fld3aQFBjfYcGrhp9 | multipleSelects | Simon / James / Jason / Marco / Sarah / Darina |
 | SOWs | fld5FahVTcPKhDv2x | multipleRecordLinks | → SOWs |
 | # SOWs | fldZUCc4U9bQppt6M | count | |
-| SOW Term Starts | fldAHeQKLe1MPE54s | rollup | Earliest SOW Term Start (Timeline view) |
+| OLD SOW Term Starts (any status) | fldAHeQKLe1MPE54s | rollup | **Deprecated 10/14.** Use Current Term Starts / First Engagement |
 | OLD SOW Term Ends (any status) | fldj9PNzOGgKus5Bj | rollup | **Deprecated 10/14.** Counts unsigned/declined SOWs. Don't use; safe to delete once the Timeline view is switched |
 | Contract Coverage Ends | fldymNUumnGejgKIv | rollup | Latest end date across SIGNED SOWs = when signed coverage runs out. Renewals = sales, not ACT |
 | Current Term Starts | fldvgCPxbeGnDcDFd | rollup | Start of the most recent signed SOW that has begun |
@@ -119,6 +122,24 @@ Removed on 9/29 (renamed "DELETE — …", then deleted): SOW Next Action, Sent
 Date, Filed in Drive, Next Deliverable, Due Date, Needs Attention, and the
 Projects rollups that depended on them. Unused Projects fields were also
 dropped. Don't reference any of them.
+
+### Questions fields (2026-10-15)
+
+| Field | Field ID | Type | Notes |
+|---|---|---|---|
+| Question | fldfMFAH9usykSQV5 | singleLineText | Primary. Short enough to read aloud at ACT |
+| Context | fldsmv2ri1pjwWR4T | multilineText | What the records/Drive show, and what changes once answered |
+| Ask | fldqE2tSvOdogu2Fh | singleSelect | Simon / James / Jason |
+| Status | fldMSIgwNEvmwrk2h | singleSelect | Open / Answered / Dropped |
+| Topic | fldLtgo86KoBnLdcr | singleSelect | |
+| Project / SOW | fldSfNqythe4foIC2 / fld7ySJLAiYEqHDKs | multipleRecordLinks | Back-links: Projects `fldgFUDyEaqMvlp7s`, SOWs `fldE9xyHwRw8cH8WX` |
+| Answer | fldOqvbuqDXdMaDxk | multilineText | Simon's words where possible |
+| Asked / Answered On | fld1CJevkmX8fjOuy / fldcm3ZTACq2M5z1y | date | |
+
+Workflow: Simon answers at ACT. When notes are processed, write the Answer,
+set Status Answered + Answered On, **and fix the underlying Project/SOW
+record**. Simon's routine may add and answer rows but leaves record fixes to
+a person.
 
 **SOW Status options (exact spelling):** Executed & Filed · Executed, not
 filed · Awaiting client countersignature · Under review · Awaiting signature
@@ -159,7 +180,7 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 | Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Flat layout: `0 · START HERE` index, Tools & limitations, the latest session log, the latest ACT prep log, Questions for Simon, the routine instructions and setup docs. Everything older goes in **Archive** (`13R7bogMArKydWbWoRyGzrOlJzn8DfkK7`). New logs go at the top level. When a new log lands, rename the previous one of the same kind so its title starts with `[Archive] ` (James, 10/15); a person then moves `[Archive]` files to Archive by hand, since the connector can't move files here. Simon's routine does this for its own ACT prep logs. Naming (10/13): standing docs `0 · START HERE`, `1 · Tools & limitations`, `2 · Questions for Simon`, `3 · ACT prep routine instructions`, `4 · Routine setup (one time)` (archive once Simon's routine runs); session logs `Log · YYYY-MM-DD · what it covers`; ACT prep runs `ACT prep · YYYY-MM-DD`. Renaming works through the connector even though moving doesn't | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
 | Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
 | Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
-| Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html`. Since 10/15 (v3) each card shows its Card Line (Issue/Win) or Next Action (else Card Line), a due chip, and a re-sign chip from `Coverage` (Re-sign · ends DATE when ≤60 days; Lapsed DATE; SOW awaiting signature; No signed SOW; SOW dates missing). Coming Up sorts dated work, then re-signs. Reads Projects fields incl. Card Line `flde7ZQbRqXa7ZQl0` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
+| Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html`. Since 10/15 (v3) each card shows its Card Line (Issue/Win) or Next Action (else Card Line), a due chip, and a re-sign chip from `Coverage` (Re-sign · ends DATE when ≤60 days; Lapsed DATE; SOW awaiting signature; No signed SOW; SOW dates missing). Coming Up sorts dated work, then re-signs. Reads Projects fields incl. Card Line `flde7ZQbRqXa7ZQl0`. Also reads the Questions table: open questions show in an "Ask Simon" section below the columns and as a "? N for Simon" chip on the linked project's card | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
 | HubSpot | Story As sales/pipeline (Simon). The HubSpot connector seen so far was JLX's | — |
 | Harvest | Out of scope (JLX) | — |
 
@@ -277,3 +298,10 @@ forwarded handoff prompt.
 - **Duke Climate Commitment Notes** hold financial figures from an earlier
   run (10/12 entry). James may delete them by hand.
 - **Clients table split** (from 9/30 ACT): proposed, not approved.
+- **Timeline view**: switch it to Current Term Starts / Contract Coverage
+  Ends in the Airtable UI (the connector can't edit views), then delete the
+  two OLD rollups.
+- **Mislabeled Drive file**: "Brown MSA + SOW1.pdf"
+  (`1OOlUuX7mErSXsPYohnZ-NEtmSx2Syh6u`) actually contains NU Water SOW9.
+- **Old Questions doc**: some items there (start dates, likely typos,
+  candidates to close) may not be in the Questions table yet.

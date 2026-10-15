@@ -194,6 +194,24 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
 .state[data-s="Declined"] { text-decoration: line-through; }
 details.older { margin-top: 4px; }
 details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 6px 0; }
+
+/* Open questions: not project issues, things someone needs to explain or decide at ACT */
+.asks { border: 1.5px dashed var(--amber); border-radius: 6px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; background: var(--card); }
+.asks .tray-head h2 { color: var(--amber); }
+.asks .stack { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.qcard { --c: var(--amber); }
+.qcard .q { font-weight: 600; font-size: 14px; line-height: 1.35; text-wrap: pretty; overflow-wrap: anywhere; }
+.qcard .pin { border-radius: 2px; transform: rotate(45deg); }
+.tag { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--chip); border-radius: 3px; padding: 1px 7px; }
+.askchip { font-size: 11px; font-weight: 700; color: var(--amber); border: 1px solid var(--amber); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.qlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.qlist button { font: inherit; text-align: left; width: 100%; color: var(--ink); background: var(--amber-bg); border: 0; border-radius: 6px; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.qlist button:focus-visible, .links button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.qlist .q { font-size: 13px; font-weight: 600; }
+.qlist .m { font-size: 11.5px; color: var(--amber); }
+.links { display: flex; flex-wrap: wrap; gap: 6px; }
+.links button { font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); background: var(--chip); border: 0; border-radius: 3px; padding: 3px 9px; cursor: pointer; }
+.ctx { margin: 0; font-size: 13.5px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 65ch; }
 </style>
 
 <div class="wrap">
@@ -217,11 +235,20 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     <span><span class="due soon">Thu Oct 22 · in 7d</span> due date</span>
     <span><span class="renew">Re-sign · ends Nov 30</span> contract needs renewing (sales, HubSpot)</span>
     <span><span class="renew bad">Lapsed Jun 30</span> signed coverage has run out</span>
+    <span><span class="askchip">? 1 for Simon</span> open question to talk through</span>
   </div>
 
   <div class="banner" id="banner" hidden></div>
 
   <main class="board" id="board" aria-label="Active projects by ACT flag"></main>
+
+  <section class="asks" id="asks" hidden aria-label="Open questions">
+    <div class="tray-head">
+      <h2 id="asks-title">Ask Simon</h2>
+      <p>Not project issues: things to explain or decide at ACT · answer in the Airtable Questions table</p>
+    </div>
+    <div class="stack" id="asks-stack"></div>
+  </section>
 
   <section class="tray" id="tray" hidden aria-label="Proposals">
     <div class="tray-head">
@@ -248,6 +275,7 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
   var TABLE = "tblERbkBOwDY4WsMV";
   var SOW_TABLE = "tblRnLtee8fTaI57w";
   var VIEW = "viwPepItyTxwcPj9K";
+  var Q_TABLE = "tblezlMZ5zJbua29I";
   var F = {
     project: "fldDRRUGOxDudM0zO",
     client: "fldkBb2clHrhCUETA",
@@ -284,6 +312,22 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     fieldIds: [S.name, S.start, S.end, S.status, S.state, S.doc],
     pageSize: 500
   };
+  var Q = {
+    question: "fldfMFAH9usykSQV5",
+    context: "fldsmv2ri1pjwWR4T",
+    ask: "fldqE2tSvOdogu2Fh",
+    status: "fldMSIgwNEvmwrk2h",
+    topic: "fldLtgo86KoBnLdcr",
+    project: "fldSfNqythe4foIC2",
+    sow: "fld7ySJLAiYEqHDKs",
+    asked: "fld1CJevkmX8fjOuy"
+  };
+  var Q_INPUT = {
+    baseId: BASE,
+    tableId: Q_TABLE,
+    fieldIds: [Q.question, Q.context, Q.ask, Q.status, Q.topic, Q.project, Q.sow, Q.asked],
+    pageSize: 500
+  };
   var COLS = [
     { k: "Issue", label: "Issue", hint: "What's going wrong", empty: "Nothing on fire." },
     { k: "Due This Week", label: "Due This Week", hint: "What's due before next ACT", empty: "Nothing due this week." },
@@ -294,7 +338,7 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
   var STATE_ORDER = { "Current": 0, "Upcoming": 1, "Unsigned": 2, "Missing dates": 3, "Expired": 4, "Declined": 5 };
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { records: null, storedAt: null, who: "All", sows: null };
+  var state = { records: null, storedAt: null, who: "All", sows: null, questions: null };
   try { var w = localStorage.getItem("sa-wb-who"); if (w) state.who = w; } catch (e) {}
 
   var today = new Date(); today.setHours(0, 0, 0, 0);
@@ -452,6 +496,35 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     return map;
   }
 
+  function normaliseQuestions(recs) {
+    return recs.map(function (r) {
+      var c = r.cellValuesByFieldId || r.fields || {};
+      function links(v) { return Array.isArray(v) ? v.map(function (x) { return x && x.id ? { id: x.id, name: x.name || "" } : null; }).filter(Boolean) : []; }
+      return {
+        id: r.id,
+        question: c[Q.question] || "",
+        context: c[Q.context] || "",
+        ask: sel(c[Q.ask]),
+        status: sel(c[Q.status]),
+        topic: sel(c[Q.topic]),
+        projects: links(c[Q.project]),
+        sows: links(c[Q.sow]),
+        asked: c[Q.asked] || ""
+      };
+    }).filter(function (q) { return q.status === "Open" && q.question; });
+  }
+  function questionsFor(projectId) {
+    if (!state.questions) return [];
+    return state.questions.filter(function (q) { return q.projects.some(function (p) { return p.id === projectId; }); });
+  }
+  function shortProject(name) { var i = name.indexOf(" — "); return i > 0 ? name.slice(0, i) : name; }
+  function askName(qs) {
+    var names = {};
+    qs.forEach(function (q) { names[q.ask || "team"] = 1; });
+    var k = Object.keys(names);
+    return k.length === 1 ? k[0] : "team";
+  }
+
   // ---------- render ----------
   function squiggle() {
     var s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -503,8 +576,10 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     var rc = showRenew ? renewChip(r) : null;
     if (rc) row.appendChild(el("span", "renew " + rc.cls, rc.text));
     r.who.forEach(function (w) { row.appendChild(el("span", "who", w)); });
+    var qs = questionsFor(r.id);
+    if (qs.length) row.appendChild(el("span", "askchip", "? " + qs.length + " for " + askName(qs)));
     if (row.childNodes.length) b.appendChild(row);
-    b.setAttribute("aria-label", r.project + ". " + (r.flag || r.status) + (why ? ": " + why : "") + (dc ? ". " + dc.text : "") + (rc ? ". " + rc.text : ""));
+    b.setAttribute("aria-label", r.project + ". " + (r.flag || r.status) + (why ? ": " + why : "") + (dc ? ". " + dc.text : "") + (rc ? ". " + rc.text : "") + (qs.length ? ". " + qs.length + " open question" + (qs.length > 1 ? "s" : "") : ""));
     b.addEventListener("click", function () { openDrawer(r); });
     return b;
   }
@@ -515,6 +590,36 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     col.appendChild(h);
     col.appendChild(squiggle());
     col.appendChild(el("p", "col-hint", c.hint));
+  }
+  function qcard(q) {
+    var b = el("button", "card qcard");
+    b.type = "button";
+    b.appendChild(el("span", "pin"));
+    var who = q.projects.length ? q.projects.map(function (p) { return shortProject(p.name); }).join(" · ") : "General";
+    b.appendChild(el("span", "client", who));
+    b.appendChild(el("span", "q", q.question));
+    var row = el("span", "row");
+    if (q.ask) row.appendChild(el("span", "askchip", "Ask " + q.ask));
+    if (q.topic) row.appendChild(el("span", "tag", q.topic));
+    b.appendChild(row);
+    b.setAttribute("aria-label", "Question for " + (q.ask || "the team") + ": " + q.question);
+    b.addEventListener("click", function () { openQuestion(q); });
+    return b;
+  }
+  function renderAsks() {
+    var box = $("asks"), st = $("asks-stack");
+    st.replaceChildren();
+    var qs = (state.questions || []).filter(function (q) {
+      return state.who === "All" || q.ask === state.who;
+    });
+    qs.sort(function (a, b) {
+      var pa = a.projects.length ? 0 : 1, pb = b.projects.length ? 0 : 1;
+      if (pa !== pb) return pa - pb;
+      return (a.asked || "").localeCompare(b.asked || "");
+    });
+    qs.forEach(function (q) { st.appendChild(qcard(q)); });
+    $("asks-title").textContent = (askName(qs) === "team" ? "Open questions" : "Ask " + askName(qs)) + " · " + qs.length;
+    box.hidden = qs.length === 0;
   }
   function renderSkeleton() {
     var board = $("board");
@@ -575,6 +680,8 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
       col.appendChild(st);
       board.appendChild(col);
     });
+
+    renderAsks();
 
     var tray = $("tray"), ts = $("tray-stack");
     ts.replaceChildren();
@@ -709,6 +816,25 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     add("Team", r.who.join(", "));
     body.appendChild(kv);
 
+    var pq = questionsFor(r.id);
+    if (pq.length) {
+      var qsec = el("div", "sec");
+      qsec.appendChild(el("h4", null, "Open questions"));
+      var ql = el("ul", "qlist");
+      pq.forEach(function (q) {
+        var li = el("li");
+        var qb = el("button");
+        qb.type = "button";
+        qb.appendChild(el("span", "q", q.question));
+        qb.appendChild(el("span", "m", "Ask " + (q.ask || "the team") + (q.topic ? " · " + q.topic : "")));
+        qb.addEventListener("click", function () { openQuestion(q); });
+        li.appendChild(qb);
+        ql.appendChild(li);
+      });
+      qsec.appendChild(ql);
+      body.appendChild(qsec);
+    }
+
     var cs = contractSection(r);
     if (cs) body.appendChild(cs);
 
@@ -729,6 +855,59 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     var foot = el("div", "dr-foot");
     var a = el("a", "btn", "Edit in Airtable ↗");
     a.href = "https://airtable.com/" + BASE + "/" + TABLE + "/" + VIEW + "/" + r.id;
+    a.target = "_blank"; a.rel = "noopener";
+    foot.appendChild(a);
+    dr.appendChild(foot);
+
+    var d = $("drawer");
+    if (typeof d.showModal === "function") { if (!d.open) d.showModal(); } else d.setAttribute("open", "");
+  }
+  function openQuestion(q) {
+    openId = null;
+    var dr = $("dr");
+    dr.replaceChildren();
+    dr.style.setProperty("--c", "var(--amber)");
+    var head = el("div", "dr-head");
+    var hl = el("div");
+    hl.appendChild(el("div", "client", "Question" + (q.asked ? " · asked " + fmtDate(q.asked) : "")));
+    var h3 = el("h3", null, q.question); h3.id = "dr-title";
+    hl.appendChild(h3);
+    hl.appendChild(el("span", "flagtag", "Ask " + (q.ask || "the team")));
+    head.appendChild(hl);
+    var x = el("button", "close", "×"); x.type = "button"; x.setAttribute("aria-label", "Close");
+    x.addEventListener("click", function () { $("drawer").close(); });
+    head.appendChild(x);
+    dr.appendChild(head);
+
+    var body = el("div", "dr-body");
+    if (q.context) {
+      var cs = el("div", "sec"); cs.appendChild(el("h4", null, "Why we're asking"));
+      cs.appendChild(el("p", "ctx", q.context)); body.appendChild(cs);
+    }
+    if (q.projects.length) {
+      var ps = el("div", "sec"); ps.appendChild(el("h4", null, "Project"));
+      var pl = el("div", "links");
+      q.projects.forEach(function (p) {
+        var rec = state.records && state.records.filter(function (x) { return x.id === p.id; })[0];
+        var pb = el("button", null, p.name);
+        pb.type = "button";
+        if (rec) pb.addEventListener("click", function () { openDrawer(rec); });
+        else pb.disabled = true;
+        pl.appendChild(pb);
+      });
+      ps.appendChild(pl); body.appendChild(ps);
+    }
+    if (q.sows.length) {
+      var ss = el("div", "sec"); ss.appendChild(el("h4", null, "SOWs"));
+      var ul = el("ul", "sowlist");
+      q.sows.forEach(function (l) { ul.appendChild(sowItem((state.sows && state.sows[l.id]) || { id: l.id, name: l.name })); });
+      ss.appendChild(ul); body.appendChild(ss);
+    }
+    dr.appendChild(body);
+
+    var foot = el("div", "dr-foot");
+    var a = el("a", "btn", "Answer in Airtable ↗");
+    a.href = "https://airtable.com/" + BASE + "/" + Q_TABLE + "/" + q.id;
     a.target = "_blank"; a.rel = "noopener";
     foot.appendChild(a);
     dr.appendChild(foot);
@@ -757,13 +936,13 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
   }
   function clearBanner() { $("banner").hidden = true; }
   function retract() {
-    state.records = null; state.storedAt = null; state.sows = null;
-    $("board").replaceChildren(); $("tray").hidden = true; $("filters").hidden = true;
+    state.records = null; state.storedAt = null; state.sows = null; state.questions = null;
+    $("board").replaceChildren(); $("tray").hidden = true; $("asks").hidden = true; $("filters").hidden = true;
     $("foot").textContent = ""; $("fresh").textContent = "";
   }
 
   // ---------- data ----------
-  var mcp = null, unwatch = null, unwatchSows = null;
+  var mcp = null, unwatch = null, unwatchSows = null, unwatchQs = null;
 
   function handleError(err) {
     var code = err && err.code;
@@ -832,7 +1011,18 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
     state.sows = normaliseSows(recs);
     refreshOpenDrawer();
   }
+  // Questions are a side panel: if they fail to load, the board still works.
+  function onQuestions(result) {
+    var recs = payloadOf(result);
+    if (!recs) return;
+    state.questions = normaliseQuestions(recs);
+    render();
+  }
   function startWatch() {
+    if (unwatchQs) { try { unwatchQs(); } catch (e) {} unwatchQs = null; }
+    unwatchQs = mcp.watchTool(SERVER, TOOL, Q_INPUT, function (ev) {
+      if (ev.type === "data") onQuestions(ev.result);
+    }, { cache: { staleTime: 60000, gcTime: 3600000 }, refetchInterval: 300000 });
     if (unwatch) { try { unwatch(); } catch (e) {} unwatch = null; }
     if (unwatchSows) { try { unwatchSows(); } catch (e) {} unwatchSows = null; }
     unwatch = mcp.watchTool(SERVER, TOOL, INPUT, function (ev) {
@@ -850,6 +1040,7 @@ details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); p
       .then(function (res) {
         onData(res);
         mcp.callTool(SERVER, TOOL, SOW_INPUT, { cache: { refresh: true, gcTime: 3600000 } }).then(onSows, function () {});
+        mcp.callTool(SERVER, TOOL, Q_INPUT, { cache: { refresh: true, gcTime: 3600000 } }).then(onQuestions, function () {});
         startWatch();
       })
       .catch(handleError)
