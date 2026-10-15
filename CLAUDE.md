@@ -69,7 +69,8 @@ Two linked tables in one base.
 - Questions: `tblezlMZ5zJbua29I` (added 2026-10-15). Things Simon (or
   James/Jason) needs to explain or decide: contract gaps, missing signed
   copies, odd dates. Not delivery issues (those use ACT Flag). Replaces the
-  old `2 · Questions for Simon` doc, which is kept for history.
+  old Questions for Simon doc; its open items were moved in on 10/15 and the
+  doc is now `[Archive] 2 · Questions for Simon`.
 
 ### Projects fields (live schema, 2026-10-12)
 
@@ -90,7 +91,7 @@ Two linked tables in one base.
 | SOWs | fld5FahVTcPKhDv2x | multipleRecordLinks | → SOWs |
 | # SOWs | fldZUCc4U9bQppt6M | count | |
 | OLD SOW Term Starts (any status) | fldAHeQKLe1MPE54s | rollup | **Deprecated 10/14.** Use Current Term Starts / First Engagement |
-| OLD SOW Term Ends (any status) | fldj9PNzOGgKus5Bj | rollup | **Deprecated 10/14.** Counts unsigned/declined SOWs. Don't use; safe to delete once the Timeline view is switched |
+| OLD SOW Term Ends (any status) | fldj9PNzOGgKus5Bj | rollup | **Deprecated 10/14.** Counts unsigned/declined SOWs. Don't use. Safe to delete (no Timeline view exists) |
 | Contract Coverage Ends | fldymNUumnGejgKIv | rollup | Latest end date across SIGNED SOWs = when signed coverage runs out. Renewals = sales, not ACT |
 | Current Term Starts | fldvgCPxbeGnDcDFd | rollup | Start of the most recent signed SOW that has begun |
 | First Engagement | fldRmPboS1382NWcb | rollup | Earliest start across signed SOWs |
@@ -298,10 +299,9 @@ forwarded handoff prompt.
 - **Duke Climate Commitment Notes** hold financial figures from an earlier
   run (10/12 entry). James may delete them by hand.
 - **Clients table split** (from 9/30 ACT): proposed, not approved.
-- **Timeline view**: switch it to Current Term Starts / Contract Coverage
-  Ends in the Airtable UI (the connector can't edit views), then delete the
-  two OLD rollups.
-- **Mislabeled Drive file**: "Brown MSA + SOW1.pdf"
-  (`1OOlUuX7mErSXsPYohnZ-NEtmSx2Syh6u`) actually contains NU Water SOW9.
-- **Old Questions doc**: some items there (start dates, likely typos,
-  candidates to close) may not be in the Questions table yet.
+- **OLD rollups**: Projects has no Timeline view (views: Grid view, Active -
+  RYG, ACT Headlines), so the two OLD rollups can be deleted in the Airtable
+  app. The connector can't delete fields.
+- **Misfiled Drive file**: `1OOlUuX7mErSXsPYohnZ-NEtmSx2Syh6u` holds NU Water
+  SOW9 but sat in the Brown folder as "Brown MSA + SOW1.pdf". Renamed 10/15
+  to say so; a person moves it.
