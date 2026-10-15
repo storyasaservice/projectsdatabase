@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a whiteboard wall — four marker columns (Issue → Due This Week → Win → Coming Up), proposals pinned in a tray underneath, card detail in a side drawer. */
+/* Layout: a whiteboard wall — four marker columns (Issue → Due This Week → Win → Coming Up), proposals pinned in a tray underneath, card detail in a side drawer. Each card says why it's on the board without a click. */
 :root {
   --board: #f6f7f5;
   --grid: rgba(40, 60, 70, 0.055);
@@ -14,8 +14,11 @@
   --line: #d7ddd9;
   --tray: #eceeeb;
   --red: #c9302a;
+  --red-bg: #fbe6e4;
   --blue: #1d5cc0;
   --green: #1b8448;
+  --amber: #9a6200;
+  --amber-bg: #fbf1dc;
   --graphite: #3a4147;
   --chip: #eef1ef;
   --shadow: 0 1px 0 rgba(20, 30, 35, 0.06), 0 2px 6px rgba(20, 30, 35, 0.05);
@@ -27,7 +30,7 @@
   :root:not([data-theme="light"]) {
     --board: #191d20; --grid: rgba(220, 235, 240, 0.045); --ink: #e7ebed; --muted: #98a2a9;
     --card: #22282c; --card-hover: #283035; --line: #343c41; --tray: #1f2427;
-    --red: #ff6f62; --blue: #72a9ff; --green: #52c784; --graphite: #c6cdd2; --chip: #2b3236;
+    --red: #ff6f62; --red-bg: #3a2220; --blue: #72a9ff; --green: #52c784; --amber: #f2b552; --amber-bg: #3a2f1c; --graphite: #c6cdd2; --chip: #2b3236;
     --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
     color-scheme: dark;
   }
@@ -35,7 +38,7 @@
 :root[data-theme="dark"] {
   --board: #191d20; --grid: rgba(220, 235, 240, 0.045); --ink: #e7ebed; --muted: #98a2a9;
   --card: #22282c; --card-hover: #283035; --line: #343c41; --tray: #1f2427;
-  --red: #ff6f62; --blue: #72a9ff; --green: #52c784; --graphite: #c6cdd2; --chip: #2b3236;
+  --red: #ff6f62; --red-bg: #3a2220; --blue: #72a9ff; --green: #52c784; --amber: #f2b552; --amber-bg: #3a2f1c; --graphite: #c6cdd2; --chip: #2b3236;
   --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
   color-scheme: dark;
 }
@@ -66,7 +69,7 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
   padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
 }
 .btn:hover { background: var(--card-hover); }
-.btn:focus-visible, .card:focus-visible, .chipbtn:focus-visible, .close:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn:focus-visible, .card:focus-visible, .chipbtn:focus-visible, .close:focus-visible, summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .btn[disabled] { opacity: 0.55; cursor: default; }
 .btn a, a.btn { color: inherit; text-decoration: none; }
 
@@ -91,6 +94,7 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .col-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; color: var(--c); }
 .col-head h2 { font-family: var(--f-marker); font-weight: 400; font-size: 24px; line-height: 1.1; margin: 0; }
 .col-head .n { font-family: var(--f-marker); font-size: 22px; line-height: 1; }
+.col-hint { margin: -6px 0 0; font-size: 11.5px; color: var(--muted); }
 .squiggle { display: block; width: 100%; height: 8px; color: var(--c); margin-top: -4px; }
 .col[data-k="Issue"] { --c: var(--red); }
 .col[data-k="Due This Week"] { --c: var(--blue); }
@@ -109,12 +113,21 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .card .pin { position: absolute; top: -5px; right: 12px; width: 11px; height: 11px; border-radius: 50%; background: var(--c); box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
 .card .client { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding-right: 20px; }
 .card .what { font-weight: 600; font-size: 14.5px; line-height: 1.3; text-wrap: pretty; overflow-wrap: anywhere; }
-.card .next { color: var(--ink); opacity: 0.86; font-size: 13px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card .why { font-size: 13px; color: var(--ink); border-left: 2px solid var(--c); padding-left: 8px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.card .why.quiet { border-left-color: var(--line); color: var(--muted); }
 .card .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
 .due { font-family: var(--f-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 3px; background: var(--chip); color: var(--ink); white-space: nowrap; }
 .due.late { background: var(--red); color: var(--card); }
 .due.soon { background: var(--blue); color: var(--card); }
+.due.tbd { background: transparent; color: var(--amber); border: 1px dashed var(--amber); padding: 1px 6px; }
+.renew { font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 3px; white-space: nowrap; background: var(--amber-bg); color: var(--amber); }
+.renew.bad { background: var(--red-bg); color: var(--red); }
+.renew.info { background: transparent; color: var(--muted); border: 1px dashed var(--line); padding: 1px 6px; }
 .who { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; }
+
+/* Legend */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: var(--muted); }
+.legend span.renew, .legend span.due { font-size: 11px; }
 
 /* Tray */
 .tray { background: var(--tray); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -143,6 +156,7 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
 .dr-head .client { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 .dr-head h3 { margin: 4px 0 0; font-size: 19px; line-height: 1.25; text-wrap: balance; }
 .flagtag { display: inline-block; margin-top: 8px; font-family: var(--f-marker); font-size: 15px; color: var(--c); }
+.dr-why { margin: 8px 0 0; font-size: 14px; border-left: 2px solid var(--c); padding-left: 10px; max-width: 60ch; }
 .close { font: inherit; font-size: 20px; line-height: 1; background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; width: 34px; height: 34px; cursor: pointer; flex: none; }
 .dr-body { padding: 16px 20px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
 .kv { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 6px 12px; font-size: 13px; }
@@ -157,6 +171,29 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
 .sows { display: flex; flex-wrap: wrap; gap: 6px; }
 .sows span { font-size: 12px; background: var(--chip); border-radius: 3px; padding: 2px 8px; }
 .dr-foot { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); }
+
+/* Contract coverage */
+.cov { display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+.cov strong { font-size: 14px; font-weight: 600; }
+.cov span { font-size: 12.5px; color: var(--muted); }
+.cov[data-tone="ok"] strong { color: var(--green); }
+.cov[data-tone="warn"] { background: var(--amber-bg); border-color: transparent; }
+.cov[data-tone="warn"] strong { color: var(--amber); }
+.cov[data-tone="bad"] strong { color: var(--red); }
+.sowlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.sowlist li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.sowlist li:first-child { border-top: 0; }
+.sowlist .nm { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.sowlist .nm a { color: inherit; text-decoration-color: var(--line); text-underline-offset: 2px; }
+.sowlist .dt { grid-column: 1; font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sowlist .st { grid-column: 1; font-size: 11.5px; color: var(--muted); }
+.state { grid-column: 2; grid-row: 1 / span 2; align-self: start; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid var(--line); color: var(--muted); }
+.state[data-s="Current"] { color: var(--green); border-color: var(--green); }
+.state[data-s="Upcoming"] { color: var(--blue); border-color: var(--blue); }
+.state[data-s="Unsigned"], .state[data-s="Missing dates"] { color: var(--amber); border-color: var(--amber); background: var(--amber-bg); }
+.state[data-s="Declined"] { text-decoration: line-through; }
+details.older { margin-top: 4px; }
+details.older summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 6px 0; }
 </style>
 
 <div class="wrap">
@@ -174,6 +211,12 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
 
   <div class="filters" id="filters" hidden>
     <span class="lbl">Who</span>
+  </div>
+
+  <div class="legend" aria-label="Chip key">
+    <span><span class="due soon">Thu Oct 22 · in 7d</span> due date</span>
+    <span><span class="renew">Re-sign · ends Nov 30</span> contract needs renewing (sales, HubSpot)</span>
+    <span><span class="renew bad">Lapsed Jun 30</span> signed coverage has run out</span>
   </div>
 
   <div class="banner" id="banner" hidden></div>
@@ -203,6 +246,7 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
   var TOOL = "list_records_for_table";
   var BASE = "apph33yxxKNjn23Bj";
   var TABLE = "tblERbkBOwDY4WsMV";
+  var SOW_TABLE = "tblRnLtee8fTaI57w";
   var VIEW = "viwPepItyTxwcPj9K";
   var F = {
     project: "fldDRRUGOxDudM0zO",
@@ -215,24 +259,42 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     poc: "fld2KZ8MrMiPC9yT1",
     sows: "fld5FahVTcPKhDv2x",
     who: "fld3aQFBjfYcGrhp9",
-    termEnd: "fldj9PNzOGgKus5Bj"
+    coverage: "fldALr1TDJXfLgKUw",
+    coverEnd: "fldymNUumnGejgKIv",
+    termStart: "fldvgCPxbeGnDcDFd",
+    reason: "flde7ZQbRqXa7ZQl0"
+  };
+  var S = {
+    name: "fldulsGfCZWjOzdb8",
+    start: "fldgj7pNkkYH5tQeI",
+    end: "fldQ5Dv4ss1EWWTtC",
+    status: "fld9l96Ul2qMSJAUo",
+    state: "fldCKi4aHcktAJgAr",
+    doc: "fldqDiwA0pxtzR1LX"
   };
   var INPUT = {
     baseId: BASE,
     tableId: TABLE,
-    fieldIds: [F.project, F.client, F.status, F.notes, F.next, F.due, F.flag, F.poc, F.sows, F.who, F.termEnd],
+    fieldIds: [F.project, F.client, F.status, F.notes, F.next, F.due, F.flag, F.poc, F.sows, F.who, F.coverage, F.coverEnd, F.termStart, F.reason],
+    pageSize: 500
+  };
+  var SOW_INPUT = {
+    baseId: BASE,
+    tableId: SOW_TABLE,
+    fieldIds: [S.name, S.start, S.end, S.status, S.state, S.doc],
     pageSize: 500
   };
   var COLS = [
-    { k: "Issue", label: "Issue", empty: "Nothing on fire." },
-    { k: "Due This Week", label: "Due This Week", empty: "Nothing due this week." },
-    { k: "Win", label: "Win", empty: "No wins logged yet." },
-    { k: "Coming Up", label: "Coming Up", empty: "Nothing queued." }
+    { k: "Issue", label: "Issue", hint: "What's going wrong", empty: "Nothing on fire." },
+    { k: "Due This Week", label: "Due This Week", hint: "What's due before next ACT", empty: "Nothing due this week." },
+    { k: "Win", label: "Win", hint: "Who said what, and when", empty: "No wins logged yet." },
+    { k: "Coming Up", label: "Coming Up", hint: "What's next · re-signs flagged", empty: "Nothing queued." }
   ];
   var FLAG_COLOR = { "Issue": "var(--red)", "Due This Week": "var(--blue)", "Win": "var(--green)", "Coming Up": "var(--graphite)" };
+  var STATE_ORDER = { "Current": 0, "Upcoming": 1, "Unsigned": 2, "Missing dates": 3, "Expired": 4, "Declined": 5 };
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { records: null, storedAt: null, who: "All" };
+  var state = { records: null, storedAt: null, who: "All", sows: null };
   try { var w = localStorage.getItem("sa-wb-who"); if (w) state.who = w; } catch (e) {}
 
   var today = new Date(); today.setHours(0, 0, 0, 0);
@@ -247,12 +309,21 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
   }
   function sel(v) { return v && typeof v === "object" ? (v.name || "") : (v || ""); }
   function multi(v) { return Array.isArray(v) ? v.map(sel).filter(Boolean) : []; }
+  function first(v) { return Array.isArray(v) ? v[0] : v; }
   function parseDate(s) {
     if (!s || typeof s !== "string") return null;
     var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (!m) return null;
     return new Date(+m[1], +m[2] - 1, +m[3]);
   }
+  function fmtDate(s, withYear) {
+    var d = parseDate(s);
+    if (!d) return "";
+    var o = { month: "short", day: "numeric" };
+    if (withYear || d.getFullYear() !== today.getFullYear()) o.year = "numeric";
+    return d.toLocaleDateString(undefined, o);
+  }
+  function daysTo(s) { var d = parseDate(s); return d ? Math.round((d - today) / 86400000) : null; }
   function dueInfo(s) {
     var d = parseDate(s);
     if (!d) return null;
@@ -266,6 +337,42 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     else if (days <= 6) { rel = "in " + days + "d"; cls = "soon"; }
     else { rel = "in " + days + "d"; }
     return { text: wk + " " + short + " · " + rel, cls: cls, days: days };
+  }
+  // A live Next Action with no Due date still shows, marked "Date TBD".
+  function dueChip(r) {
+    var di = dueInfo(r.due);
+    if (di) return { text: di.text, cls: di.cls };
+    if (r.next) return { text: "Date TBD", cls: "tbd" };
+    return null;
+  }
+  function cleanNext(t) { return String(t || "").replace(/^Due\s+TBD\s*[—–-]\s*/i, ""); }
+  // The one line a card shows. Issue and Win cards explain the flag (Card Line);
+  // Due This Week and Coming Up cards show the deliverable, else what's happening now.
+  function whyLine(r) {
+    var next = cleanNext(r.next);
+    if (r.flag === "Issue" || r.flag === "Win") return r.reason || next;
+    return next || r.reason;
+  }
+  // Re-sign signal from SIGNED-SOW coverage. Renewals are sales (HubSpot); this only makes them visible.
+  function renewChip(r) {
+    var end = fmtDate(r.coverEnd);
+    var d = daysTo(r.coverEnd);
+    switch (r.coverage) {
+      case "Expiring soon":
+        return { text: "Re-sign · ends " + end + (d != null ? " (" + d + "d)" : ""), cls: "" };
+      case "Expired":
+        return { text: "Lapsed " + end + " · re-sign or close", cls: "bad" };
+      case "Expired — SOW awaiting signature":
+        return { text: "Renewal out for signature", cls: "" };
+      case "Unsigned — awaiting signature":
+        return { text: "SOW awaiting signature", cls: "" };
+      case "No signed SOW":
+        return { text: "No signed SOW", cls: "" };
+      case "Missing dates":
+        return { text: "SOW dates missing", cls: "info" };
+      default:
+        return null;
+    }
   }
   function splitName(project, client) {
     var p = project || "";
@@ -295,11 +402,15 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     if (h < 24) return h + " h ago";
     return new Date(ms).toLocaleString();
   }
+  function payloadOf(result) {
+    var payload = result && (result.payload !== undefined ? result.payload : result.structuredContent);
+    if (typeof payload === "string") { try { payload = JSON.parse(payload); } catch (e) {} }
+    var recs = payload && (payload.records || (payload.result && payload.result.records));
+    return Array.isArray(recs) ? recs : null;
+  }
 
   // ---------- normalise rows ----------
-  function normalise(payload) {
-    var recs = payload && (payload.records || (payload.result && payload.result.records));
-    if (!Array.isArray(recs)) return null;
+  function normalise(recs) {
     return recs.map(function (r) {
       var c = r.cellValuesByFieldId || r.fields || {};
       var names = splitName(c[F.project], c[F.client]);
@@ -315,11 +426,30 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
         due: c[F.due] || "",
         poc: c[F.poc] || "",
         notes: c[F.notes] || "",
-        sows: Array.isArray(c[F.sows]) ? c[F.sows].map(function (s) { return s && s.name ? s.name : String(s); }) : [],
+        reason: c[F.reason] || "",
+        sowLinks: Array.isArray(c[F.sows]) ? c[F.sows].map(function (s) { return s && s.id ? { id: s.id, name: s.name || "" } : { id: "", name: String(s) }; }) : [],
         who: multi(c[F.who]),
-        termEnd: Array.isArray(c[F.termEnd]) ? c[F.termEnd][0] : c[F.termEnd]
+        coverage: sel(first(c[F.coverage])),
+        coverEnd: first(c[F.coverEnd]) || "",
+        termStart: first(c[F.termStart]) || ""
       };
     });
+  }
+  function normaliseSows(recs) {
+    var map = {};
+    recs.forEach(function (r) {
+      var c = r.cellValuesByFieldId || r.fields || {};
+      map[r.id] = {
+        id: r.id,
+        name: c[S.name] || "",
+        start: c[S.start] || "",
+        end: c[S.end] || "",
+        status: sel(c[S.status]),
+        state: sel(first(c[S.state])),
+        doc: c[S.doc] || ""
+      };
+    });
+    return map;
   }
 
   // ---------- render ----------
@@ -338,29 +468,53 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     s.appendChild(p);
     return s;
   }
+  // Dated first, then Date TBD, then nothing in progress.
   function byDue(a, b) {
     var da = parseDate(a.due), db = parseDate(b.due);
     if (da && db) return da - db;
     if (da) return -1;
     if (db) return 1;
+    var ta = a.next ? 0 : 1, tb = b.next ? 0 : 1;
+    if (ta !== tb) return ta - tb;
     return a.project.localeCompare(b.project);
   }
-  function card(r, colorVar) {
+  // Coming Up: dated work first, then anything needing a re-sign, then the rest.
+  function byComingUp(a, b) {
+    var da = parseDate(a.due), db = parseDate(b.due);
+    if (da && db) return da - db;
+    if (da) return -1;
+    if (db) return 1;
+    var ra = renewChip(a) ? 0 : 1, rb = renewChip(b) ? 0 : 1;
+    if (ra !== rb) return ra - rb;
+    return a.project.localeCompare(b.project);
+  }
+  function card(r, colorVar, showRenew) {
     var b = el("button", "card");
     b.type = "button";
     if (colorVar) b.style.setProperty("--c", colorVar);
     b.appendChild(el("span", "pin"));
     b.appendChild(el("span", "client", r.client));
     b.appendChild(el("span", "what", r.what));
-    if (r.next) b.appendChild(el("span", "next", r.next));
+    var why = r.status === "Active" ? whyLine(r) : cleanNext(r.next);
+    if (why) b.appendChild(el("span", "why" + (r.status === "Active" ? "" : " quiet"), why));
     var row = el("span", "row");
-    var di = dueInfo(r.due);
-    if (di) row.appendChild(el("span", "due " + di.cls, di.text));
+    var dc = dueChip(r);
+    if (dc) row.appendChild(el("span", "due " + dc.cls, dc.text));
+    var rc = showRenew ? renewChip(r) : null;
+    if (rc) row.appendChild(el("span", "renew " + rc.cls, rc.text));
     r.who.forEach(function (w) { row.appendChild(el("span", "who", w)); });
     if (row.childNodes.length) b.appendChild(row);
-    b.setAttribute("aria-label", r.project + (r.next ? ". " + r.next : ""));
+    b.setAttribute("aria-label", r.project + ". " + (r.flag || r.status) + (why ? ": " + why : "") + (dc ? ". " + dc.text : "") + (rc ? ". " + rc.text : ""));
     b.addEventListener("click", function () { openDrawer(r); });
     return b;
+  }
+  function colHead(col, c, count) {
+    var h = el("div", "col-head");
+    h.appendChild(el("h2", null, c.label));
+    h.appendChild(el("span", "n", count));
+    col.appendChild(h);
+    col.appendChild(squiggle());
+    col.appendChild(el("p", "col-hint", c.hint));
   }
   function renderSkeleton() {
     var board = $("board");
@@ -368,11 +522,7 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     COLS.forEach(function (c) {
       var col = el("section", "col");
       col.dataset.k = c.k;
-      var h = el("div", "col-head");
-      h.appendChild(el("h2", null, c.label));
-      h.appendChild(el("span", "n", "·"));
-      col.appendChild(h);
-      col.appendChild(squiggle());
+      colHead(col, c, "·");
       var st = el("div", "stack");
       for (var i = 0; i < (c.k === "Coming Up" ? 4 : 2); i++) st.appendChild(el("div", "ghost"));
       col.appendChild(st);
@@ -414,18 +564,14 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     COLS.forEach(function (c) {
       var items = active.filter(function (r) {
         return c.k === "Coming Up" ? (r.flag === "Coming Up" || !r.flag || !FLAG_COLOR[r.flag]) : r.flag === c.k;
-      }).sort(byDue);
+      }).sort(c.k === "Coming Up" ? byComingUp : byDue);
       var col = el("section", "col");
       col.dataset.k = c.k;
       col.setAttribute("aria-label", c.label + ", " + items.length);
-      var h = el("div", "col-head");
-      h.appendChild(el("h2", null, c.label));
-      h.appendChild(el("span", "n", String(items.length)));
-      col.appendChild(h);
-      col.appendChild(squiggle());
+      colHead(col, c, String(items.length));
       var st = el("div", "stack");
       if (!items.length) st.appendChild(el("div", "empty", c.empty));
-      items.forEach(function (r) { st.appendChild(card(r, FLAG_COLOR[c.k])); });
+      items.forEach(function (r) { st.appendChild(card(r, FLAG_COLOR[c.k], true)); });
       col.appendChild(st);
       board.appendChild(col);
     });
@@ -433,7 +579,7 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     var tray = $("tray"), ts = $("tray-stack");
     ts.replaceChildren();
     proposals.sort(function (a, b) { return a.project.localeCompare(b.project); })
-      .forEach(function (r) { ts.appendChild(card(r, null)); });
+      .forEach(function (r) { ts.appendChild(card(r, null, false)); });
     tray.hidden = proposals.length === 0;
 
     $("foot").textContent = active.length + " active · " + proposals.length + " in pipeline · " + closed + " closed (not shown)";
@@ -444,8 +590,97 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
   }
   setInterval(renderFresh, 30000);
 
+  // ---------- contract coverage ----------
+  function coverageLine(r) {
+    var end = fmtDate(r.coverEnd, true);
+    var d = daysTo(r.coverEnd);
+    switch (r.coverage) {
+      case "Covered":
+        return { tone: "ok", head: "Covered through " + end, sub: r.termStart ? "Current term began " + fmtDate(r.termStart, true) : "" };
+      case "Expiring soon":
+        return { tone: "warn", head: "Coverage ends " + end + (d != null ? " · " + d + "d left" : ""), sub: "Renewal is a sales item (HubSpot)." };
+      case "Expired":
+        return { tone: "bad", head: "Signed coverage ended " + end, sub: "No newer signed SOW on file. Work may still be going on." };
+      case "Expired — SOW awaiting signature":
+        return { tone: "warn", head: "Signed coverage ended " + end, sub: "An SOW is out for signature. Work may still be going on." };
+      case "Unsigned — awaiting signature":
+        return { tone: "warn", head: "Unsigned · awaiting signature", sub: "Work can be under way before the signature lands." };
+      case "No signed SOW":
+        return { tone: "warn", head: "No signed SOW on file", sub: "" };
+      case "Missing dates":
+        return { tone: "warn", head: "Signed SOW is missing its term dates", sub: "Fill in SOW Term Start / End in Airtable." };
+      case "No SOW":
+        return { tone: "", head: "No SOW linked", sub: "" };
+      default:
+        return null;
+    }
+  }
+  function sowItem(s) {
+    var li = el("li");
+    var nm = el("span", "nm");
+    if (s.doc && /^https:\/\//.test(s.doc)) {
+      var a = el("a", null, s.name || "(unnamed SOW)");
+      a.href = s.doc; a.target = "_blank"; a.rel = "noopener";
+      nm.appendChild(a);
+    } else nm.textContent = s.name || "(unnamed SOW)";
+    li.appendChild(nm);
+    var st = el("span", "state", s.state || "—");
+    st.dataset.s = s.state || "";
+    li.appendChild(st);
+    var a1 = fmtDate(s.start, true), b1 = fmtDate(s.end, true);
+    li.appendChild(el("span", "dt", (a1 || "start not set") + " → " + (b1 || "end not set")));
+    if (s.status) li.appendChild(el("span", "st", s.status));
+    return li;
+  }
+  function contractSection(r) {
+    if (!r.sowLinks.length && !r.coverage) return null;
+    var sec = el("div", "sec");
+    sec.appendChild(el("h4", null, "Contract"));
+    var cl = coverageLine(r);
+    if (cl) {
+      var box = el("div", "cov");
+      if (cl.tone) box.dataset.tone = cl.tone;
+      box.appendChild(el("strong", null, cl.head));
+      if (cl.sub) box.appendChild(el("span", null, cl.sub));
+      sec.appendChild(box);
+    }
+    if (!state.sows) {
+      var sw = el("div", "sows");
+      r.sowLinks.forEach(function (n) { sw.appendChild(el("span", null, n.name)); });
+      sec.appendChild(sw);
+      return sec;
+    }
+    var list = r.sowLinks.map(function (l) { return state.sows[l.id] || { id: l.id, name: l.name }; });
+    list.sort(function (a, b) {
+      var oa = STATE_ORDER[a.state] != null ? STATE_ORDER[a.state] : 9;
+      var ob = STATE_ORDER[b.state] != null ? STATE_ORDER[b.state] : 9;
+      if (oa !== ob) return oa - ob;
+      var ea = parseDate(a.end) || parseDate(a.start), eb = parseDate(b.end) || parseDate(b.start);
+      if (ea && eb) return eb - ea;
+      return ea ? -1 : eb ? 1 : 0;
+    });
+    var live = list.filter(function (s) { return s.state !== "Expired" && s.state !== "Declined"; });
+    var past = list.filter(function (s) { return s.state === "Expired" || s.state === "Declined"; });
+    // A project whose only SOWs are past still shows the latest one up front.
+    if (!live.length && past.length) live = [past.shift()];
+    var ul = el("ul", "sowlist");
+    live.forEach(function (s) { ul.appendChild(sowItem(s)); });
+    sec.appendChild(ul);
+    if (past.length) {
+      var det = el("details", "older");
+      det.appendChild(el("summary", null, past.length + " earlier SOW" + (past.length > 1 ? "s" : "")));
+      var ul2 = el("ul", "sowlist");
+      past.forEach(function (s) { ul2.appendChild(sowItem(s)); });
+      det.appendChild(ul2);
+      sec.appendChild(det);
+    }
+    return sec;
+  }
+
   // ---------- drawer ----------
+  var openId = null;
   function openDrawer(r) {
+    openId = r.id;
     var dr = $("dr");
     dr.replaceChildren();
     var color = FLAG_COLOR[r.flag] || "var(--muted)";
@@ -457,6 +692,7 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     var h3 = el("h3", null, r.what); h3.id = "dr-title";
     hl.appendChild(h3);
     hl.appendChild(el("span", "flagtag", r.status === "Active" ? (r.flag || "No flag") : r.status));
+    if (r.status === "Active" && r.reason) hl.appendChild(el("p", "dr-why", r.reason));
     head.appendChild(hl);
     var x = el("button", "close", "×"); x.type = "button"; x.setAttribute("aria-label", "Close");
     x.addEventListener("click", function () { $("drawer").close(); });
@@ -466,19 +702,16 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     var body = el("div", "dr-body");
     var kv = el("dl", "kv");
     function add(k, v) { if (!v) return; kv.appendChild(el("dt", null, k)); kv.appendChild(el("dd", null, v)); }
-    add("Next", r.next);
-    var di = dueInfo(r.due); add("Due", di ? di.text : "");
+    add("Next", cleanNext(r.next));
+    var dc = dueChip(r); add("Due", dc ? dc.text : "");
     add("Client", r.clientFull);
     add("Contact", r.poc);
     add("Team", r.who.join(", "));
-    var te = dueInfo(r.termEnd); add("SOW ends", te ? te.text.split(" · ")[0] : "");
     body.appendChild(kv);
 
-    if (r.sows.length) {
-      var s = el("div", "sec"); s.appendChild(el("h4", null, "Statements of work"));
-      var sw = el("div", "sows"); r.sows.forEach(function (n) { sw.appendChild(el("span", null, n)); });
-      s.appendChild(sw); body.appendChild(s);
-    }
+    var cs = contractSection(r);
+    if (cs) body.appendChild(cs);
+
     var log = parseNotes(r.notes);
     if (log.length) {
       var ls = el("div", "sec"); ls.appendChild(el("h4", null, "Status history · newest first"));
@@ -504,6 +737,12 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     if (typeof d.showModal === "function") { if (!d.open) d.showModal(); } else d.setAttribute("open", "");
   }
   $("drawer").addEventListener("click", function (e) { if (e.target === this) this.close(); });
+  $("drawer").addEventListener("close", function () { openId = null; });
+  function refreshOpenDrawer() {
+    if (!openId || !state.records) return;
+    var r = state.records.filter(function (x) { return x.id === openId; })[0];
+    if (r) openDrawer(r);
+  }
 
   // ---------- banner ----------
   function banner(title, detail, action) {
@@ -518,13 +757,13 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
   }
   function clearBanner() { $("banner").hidden = true; }
   function retract() {
-    state.records = null; state.storedAt = null;
+    state.records = null; state.storedAt = null; state.sows = null;
     $("board").replaceChildren(); $("tray").hidden = true; $("filters").hidden = true;
     $("foot").textContent = ""; $("fresh").textContent = "";
   }
 
   // ---------- data ----------
-  var mcp = null, unwatch = null;
+  var mcp = null, unwatch = null, unwatchSows = null;
 
   function handleError(err) {
     var code = err && err.code;
@@ -578,27 +817,41 @@ dialog.drawer::backdrop { background: rgba(10, 15, 18, 0.35); }
     }
   }
   function onData(result) {
-    var payload = result && (result.payload !== undefined ? result.payload : result.structuredContent);
-    if (typeof payload === "string") { try { payload = JSON.parse(payload); } catch (e) {} }
-    var rows = normalise(payload);
-    if (!rows) { handleError({ code: "tool_error", message: "Airtable answered, but not with a list of projects." }); return; }
+    var recs = payloadOf(result);
+    if (!recs) { handleError({ code: "tool_error", message: "Airtable answered, but not with a list of projects." }); return; }
     clearBanner();
-    state.records = rows;
+    state.records = normalise(recs);
     state.storedAt = result.cache && result.cache.storedAt ? result.cache.storedAt : Date.now();
     render();
+    refreshOpenDrawer();
+  }
+  // SOW details are a nice-to-have: if they fail, the drawer falls back to SOW names.
+  function onSows(result) {
+    var recs = payloadOf(result);
+    if (!recs) return;
+    state.sows = normaliseSows(recs);
+    refreshOpenDrawer();
   }
   function startWatch() {
     if (unwatch) { try { unwatch(); } catch (e) {} unwatch = null; }
+    if (unwatchSows) { try { unwatchSows(); } catch (e) {} unwatchSows = null; }
     unwatch = mcp.watchTool(SERVER, TOOL, INPUT, function (ev) {
       if (ev.type === "data") onData(ev.result);
       else handleError(ev.error);
     }, { cache: { staleTime: 60000, gcTime: 3600000 }, refetchInterval: 300000 });
+    unwatchSows = mcp.watchTool(SERVER, TOOL, SOW_INPUT, function (ev) {
+      if (ev.type === "data") onSows(ev.result);
+    }, { cache: { staleTime: 300000, gcTime: 3600000 }, refetchInterval: 900000 });
   }
   function loadOnce() {
     if (!mcp) return;
     var r = $("refresh"); r.disabled = true;
     mcp.callTool(SERVER, TOOL, INPUT, { cache: { refresh: true, gcTime: 3600000 } })
-      .then(function (res) { onData(res); startWatch(); })
+      .then(function (res) {
+        onData(res);
+        mcp.callTool(SERVER, TOOL, SOW_INPUT, { cache: { refresh: true, gcTime: 3600000 } }).then(onSows, function () {});
+        startWatch();
+      })
       .catch(handleError)
       .finally(function () { r.disabled = false; });
   }

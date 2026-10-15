@@ -3,7 +3,9 @@
 This file is the working context for the Story As Airtable project tracker.
 Read this before making any changes. Last rewritten 2026-10-12 against the
 live schema; it replaces the 2026-09-03 version, which predated the 9/22 ACT
-workflow and the 9/29 schema cleanup.
+workflow and the 9/29 schema cleanup. Updated 2026-10-15: contract-coverage
+fields, the new Card Line field, Whiteboard card rules, Simon's weekday
+routine and the [Archive] naming for old logs.
 
 The authoritative append-only history of what was decided and why is the
 Drive log in **Project Tracking** (see §4). This file is a working summary.
@@ -62,8 +64,9 @@ Two linked tables in one base.
 - SOWs: `tblRnLtee8fTaI57w`
 - ACT Headlines view (Projects, ACT Flag not empty, sorted on `Due`):
   `viwPepItyTxwcPj9K`
-- Decisions: `tblCWLdCkpz3DETd4` (created 2026-09-03). As of 2026-10-12 it is
-  **not in the base**, even with edit access. Probably deleted.
+- Decisions: `tblCWLdCkpz3DETd4` (created 2026-09-03) is **gone** from the
+  base. Open questions live in the `2 · Questions for Simon` doc in Project
+  Tracking instead.
 
 ### Projects fields (live schema, 2026-10-12)
 
@@ -76,6 +79,7 @@ Two linked tables in one base.
 | Next Action | fldl36WJAPPzJWh29 | multilineText | Only a clear due deliverable: "Due M/D — what". Blank is normal |
 | Due | fldzBD35sasrNRos6 | date | Date of the Next Action deliverable. Set and clear together with Next Action |
 | ACT Flag | fldMEtAAai6aqfMOu | singleSelect | See ACT rules below |
+| Card Line | flde7ZQbRqXa7ZQl0 | singleLineText | Added 10/15. The one line the Whiteboard card shows: WHY the row has its flag. Rewritten, not appended. See ACT rules |
 | Category | fld2ZfDcdzo0Y6rDy | singleSelect | |
 | POC | fld2KZ8MrMiPC9yT1 | multilineText | Client-side point of contact |
 | Parent Org | fldqp8Y5GORwrQ1Jk | singleSelect | Umbrella institution. Reused old Priority column; has dead legacy options |
@@ -83,7 +87,14 @@ Two linked tables in one base.
 | SOWs | fld5FahVTcPKhDv2x | multipleRecordLinks | → SOWs |
 | # SOWs | fldZUCc4U9bQppt6M | count | |
 | SOW Term Starts | fldAHeQKLe1MPE54s | rollup | Earliest SOW Term Start (Timeline view) |
-| SOW Term Ends | fldj9PNzOGgKus5Bj | rollup | Latest SOW Term End. Renewals = sales, not ACT |
+| OLD SOW Term Ends (any status) | fldj9PNzOGgKus5Bj | rollup | **Deprecated 10/14.** Counts unsigned/declined SOWs. Don't use; safe to delete once the Timeline view is switched |
+| Contract Coverage Ends | fldymNUumnGejgKIv | rollup | Latest end date across SIGNED SOWs = when signed coverage runs out. Renewals = sales, not ACT |
+| Current Term Starts | fldvgCPxbeGnDcDFd | rollup | Start of the most recent signed SOW that has begun |
+| First Engagement | fldRmPboS1382NWcb | rollup | Earliest start across signed SOWs |
+| Signed SOWs | fld1CdZd4yqlG3XUH | rollup | Count of signed SOWs |
+| SOWs Pending Signature | fldUfA5kChlBUWotm | rollup | Count out for signature |
+| Signed SOWs Missing Dates | fldPA2d7fwMozZssp | rollup | >0 means Contract Coverage Ends may be wrong |
+| Coverage | fldALr1TDJXfLgKUw | formula | Covered / Expiring soon (≤60 days) / Expired / Expired — SOW awaiting signature / Unsigned — awaiting signature / No signed SOW / Missing dates / No SOW. Drives the Whiteboard re-sign chips |
 | Project Summary (AI) | fldcOxO7pMOQajz46 | aiText | Legacy |
 
 ### SOWs fields (live schema, 2026-10-12)
@@ -100,6 +111,9 @@ Two linked tables in one base.
 | Signed by Client | fldWFFreejkIB3OKz | checkbox | |
 | SOW Document | fldqDiwA0pxtzR1LX | url | Direct Drive link to the source document |
 | Notes | fldR3qSn7ppA5vqx0 | multilineText | Append only. Normalization and source notes go here |
+| Signed / Pending Signature | fldr1TcZxhZ6NF1Ly / fld3EV692w3Fq4hZ9 | formula | 1/0 flags from Status |
+| Term State | fldCKi4aHcktAJgAr | formula | Declined / Unsigned / Missing dates / Upcoming / Current / Expired |
+| Signed End / Signed Start / Begun Signed Start | fldqyuOEUf6lX1qxW / fldzBh9SPwTjN6w2f / fldHxQznYBr1WDPow | formula | Feed the Projects coverage rollups |
 
 Removed on 9/29 (renamed "DELETE — …", then deleted): SOW Next Action, Sent
 Date, Filed in Drive, Next Deliverable, Due Date, Needs Attention, and the
@@ -127,6 +141,14 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 - Changing a Next Action: first append the old text to Notes as
   `\n\n[Status M/D/YY] <old text>`, then write the new one. Never delete
   history.
+- **Card Line** (James, 10/15): every Active row has one, so the Whiteboard
+  works without clicking into a card. Issue = the specific problem. Win = who
+  said what about which work, and when ("10/12: Amber & Christian said the
+  core story made them feel seen"). Due This Week / Coming Up = the
+  deliverable and date, or what's happening now ending "nothing dated".
+  Under ~110 characters, no financial figures. Blank on Proposal/Closed.
+- Re-signs are still sales and never get a flag. The Whiteboard shows them
+  as chips computed from `Coverage`.
 
 ## 4. Other connected systems
 
@@ -134,10 +156,10 @@ filed · Awaiting client countersignature · Under review · Awaiting signature
 |---|---|---|
 | Google Drive | Story As shared drive (source SOW/MSA documents) | `0AE8LR9pTzQbRUk9PVA` |
 | Drive folder | **Clients** (shared with james@story.as): one subfolder per client, holding SOWs and work files. The repo session's Drive connection can read it | `1gJjAicV-FFM4Y1yVq2jAaDWFqKrIoWQz` |
-| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Flat layout: `0 · START HERE` index, Tools & limitations, the latest decision log (`SOW_population_log_*`), the latest ACT prep log, Questions_for_Simon, Simon's routine setup. Everything older goes in **Archive** (`13R7bogMArKydWbWoRyGzrOlJzn8DfkK7`). New logs go at the top level; when a new one lands, move the previous one to Archive (by hand: the connector can't move files here). Naming (10/13): standing docs `0 · START HERE`, `1 · Tools & limitations`, `2 · Questions for Simon`, `3 · ACT prep routine instructions`, `4 · Routine setup (one time)` (archive once Simon's routine runs); session logs `Log · YYYY-MM-DD · what it covers`; ACT prep runs `ACT prep · YYYY-MM-DD`. Renaming works through the connector even though moving doesn't | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
+| Drive folder | **Project Tracking** (visible to james@story.as since 10/13). Flat layout: `0 · START HERE` index, Tools & limitations, the latest session log, the latest ACT prep log, Questions for Simon, the routine instructions and setup docs. Everything older goes in **Archive** (`13R7bogMArKydWbWoRyGzrOlJzn8DfkK7`). New logs go at the top level. When a new log lands, rename the previous one of the same kind so its title starts with `[Archive] ` (James, 10/15); a person then moves `[Archive]` files to Archive by hand, since the connector can't move files here. Simon's routine does this for its own ACT prep logs. Naming (10/13): standing docs `0 · START HERE`, `1 · Tools & limitations`, `2 · Questions for Simon`, `3 · ACT prep routine instructions`, `4 · Routine setup (one time)` (archive once Simon's routine runs); session logs `Log · YYYY-MM-DD · what it covers`; ACT prep runs `ACT prep · YYYY-MM-DD`. Renaming works through the connector even though moving doesn't | `1FfXGfTU-FmjO3Mgy8YSG0i04lMhgYuLd` |
 | Google Docs | ACT agenda/notes log (newest at top, very large) | `1zXXGvzzWlYb3nUkC2WPhkuSvgoS3wy5-g0z2VfHEqD4` |
 | Google Group | `ops@story.as` ("Operations"). Simon and James forward tracking material here; subjects tagged `[Story As Ops]`. Delivery to james@story.as confirmed (threads arrive under CATEGORY_FORUMS) | — |
-| Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
+| Whiteboard | Read-only live kanban of Projects by ACT Flag, owned by the Story As claude.ai account. Source: `whiteboard/index.html`. Since 10/15 (v3) each card shows its Card Line (Issue/Win) or Next Action (else Card Line), a due chip, and a re-sign chip from `Coverage` (Re-sign · ends DATE when ≤60 days; Lapsed DATE; SOW awaiting signature; No signed SOW; SOW dates missing). Coming Up sorts dated work, then re-signs. Reads Projects fields incl. Card Line `flde7ZQbRqXa7ZQl0` | https://claude.ai/artifact/7S4KW12R9qgtm7BVR15dza |
 | HubSpot | Story As sales/pipeline (Simon). The HubSpot connector seen so far was JLX's | — |
 | Harvest | Out of scope (JLX) | — |
 
@@ -209,8 +231,13 @@ forwarded handoff prompt.
 - **Weekly ACT Prep** (James's account): `trig_01RM56MVfrW33eLsFh76Do3v`,
   disabled 9/29. Full prompt in `ACT_PREP_ROUTINE_PROMPT.md` in James's local
   project folder. Needed changes are listed in `ROUTINE_MIGRATION_NOTES.md`.
-- **Simon's ACT prep routine**: runs on Simon's Claude account, Mondays at
-  12:00 PM Eastern, before ACT. Routines can't be shared or handed between
+- **Simon's ACT prep routine**: runs on Simon's Claude account **every
+  weekday at about 11:37 AM Central**, in the cloud (whether or not his
+  computer is on), so it checks his email daily and the Monday run lands
+  before ACT. Google Calendar connected 10/15 (it was missing on the 10/14
+  run, so that run used the run day as the ACT date). It writes a log and
+  sends the summary only when it changed something, found a new "Needs a
+  decision" item, or it's ACT day. Routines can't be shared or handed between
   claude.ai accounts, so its prompt is one line that tells it to open the doc
   `3 · ACT prep routine instructions`
   (`1Y7Zqfm_gniuh7PZuS1KsjOdWXnGuQGT39AJAqz8AX9A`), which holds only the
@@ -221,9 +248,10 @@ forwarded handoff prompt.
   As Primary Workspace), his Gmail and Calendar, and the shared drive. Manual
   Airtable edits made between runs (e.g. Win flags) may be overwritten on
   its next run; that's expected.
-- Routine rules that carry over: draft email only, never send; append to
-  Notes, never delete; no sales flags; anything Story As vs. JLX goes to a
-  human.
+- Routine rules that carry over: the only email sent is the run summary,
+  from Simon's Gmail to simon@story.as and james@story.as only (James,
+  10/15); anything else is a draft; append to Notes, never delete; no sales
+  flags; anything Story As vs. JLX goes to a human.
 
 ## 8. Current state snapshot (2026-10-12)
 
@@ -234,13 +262,14 @@ forwarded handoff prompt.
 - All SOWs are linked to a Project (the 14 orphans from 8/28 were resolved
   on 8/28).
 
-## 9. Open items (2026-10-12)
+## 9. Open items (2026-10-15)
 
-- **Decisions table**: not visible even after the connector was reconnected
-  with edit access on 10/12, so it was probably deleted. Confirm, and choose
-  a new home for open questions.
-- **Michigan Neuroscience**: work is underway but the row is Proposal. Is the
-  SOW signed? Empty folder Clients › University of Michigan
+- **Simon's first weekday run with auto-send**: confirm the summary email
+  actually arrives (a cloud routine may need send permission approved once)
+  and that the ACT date comes from Calendar.
+- **Michigan Neuroscience**: work is underway but the row is Proposal. A
+  completed Adobe Sign agreement came in 10/13. Status change and SOW row
+  are for a person. Empty folder Clients › University of Michigan
   (`1CB9tT7Y4nR4ap882RkoifCL28RXbIv7I`) created 10/12 for it.
 - **Trienens SOW13 PDF** sits loose in Clients › Trienen's Institute; a
   person has to move it into the `SOW` subfolder. SOW12 and SOW13 are both
